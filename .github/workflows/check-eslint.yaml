@@ -1,0 +1,36 @@
+name: ES Lint
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  ES-Lint:
+    name: ES Lint
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: true
+      matrix:
+        language: ['javascript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+          cache: 'yarn'
+
+      - name: yarn install
+        run: yarn install
+
+      - name: ESlint
+        run: npx eslint .
