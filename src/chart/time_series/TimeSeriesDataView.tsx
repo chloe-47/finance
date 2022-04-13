@@ -31,7 +31,7 @@ export default function TimeSeriesDataView({
     );
   }
 
-  const { min: xMin, max: xMax } = xOffset;
+  const { dataViewMinCoordinate: xMin, dataViewMaxCoordinate: xMax } = xOffset;
   const { getCoordinates } = createCoordinateMapper({
     chartSize,
     seriesList,
@@ -66,7 +66,7 @@ export default function TimeSeriesDataView({
             return (
               <circle
                 {...coordinates}
-                fill="#dad"
+                fill="#daf"
                 key={point.date.getTime().toString()}
                 onMouseEnter={() => {
                   console.log('mouse enter');
