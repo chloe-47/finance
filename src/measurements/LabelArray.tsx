@@ -3,8 +3,8 @@ import DateLabel from 'src/dates/DateLabel';
 import useMeasurements from 'src/measurements/useMeasurements';
 
 export type Offset = {
-  min: number;
-  max: number;
+  dataViewMinCoordinate: number;
+  dataViewMaxCoordinate: number;
   total: number;
 };
 
@@ -16,11 +16,12 @@ type Props = {
 };
 
 type ProcessedValues = {
+  dataViewWidthOrHeight: number;
+  dataViewMinCoordinate: number;
   firstLabel: string;
   lastLabel: string;
-  max: number;
-  middle: string[];
-  min: number;
+  dataViewMaxCoordinate: number;
+  middleLabels: Array<{ label: string; minCoordinate: number }>;
   total: number;
 };
 
@@ -47,8 +48,9 @@ export default function LabelArray({
 
   React.useEffect(() => {
     if (processedValues != null) {
-      const { min, max, total } = processedValues;
-      setOffset({ max, min, total });
+      const { dataViewMinCoordinate, dataViewMaxCoordinate, total } =
+        processedValues;
+      setOffset({ dataViewMaxCoordinate, dataViewMinCoordinate, total });
     }
   }, [processedValues]);
 
@@ -56,18 +58,29 @@ export default function LabelArray({
     return <div />;
   }
 
-  const { firstLabel, lastLabel, total } = processedValues;
+  const { firstLabel, lastLabel, middleLabels, total } = processedValues;
 
   return (
     <div
       style={{
         display: 'flex',
         justifyContent: 'space-between',
+        position: 'relative',
         width: total,
       }}
     >
       <div>{firstLabel}</div>
       <div>{lastLabel}</div>
+      {middleLabels.map(({ label, minCoordinate }) => {
+        return (
+          <div
+            key={label}
+            style={{ left: minCoordinate, position: 'absolute' }}
+          >
+            {label}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -95,29 +108,64 @@ function getProcessedValues({
   const firstLabel = getLabel(0);
   const lastLabel = getLabel(labels.length - 1);
   const middle = labels.slice(1, labels.length - 1);
-  middle;
 
-  const firstWidth = labelWidth(firstLabel);
-  const lastWidth = labelWidth(lastLabel);
+  const firstLabelWidth = labelWidth(firstLabel);
+  const lastLabelWidth = labelWidth(lastLabel);
 
-  const spillLeft = Math.max(firstWidth / 2, pointRadius);
-  const spillRight = Math.max(lastWidth / 2, pointRadius);
+  const spillLeft = Math.max(firstLabelWidth / 2, pointRadius);
+  const spillRight = Math.max(lastLabelWidth / 2, pointRadius);
 
-  const min = spillLeft;
-  const max = width - spillRight;
+  const dataViewMinCoordinate = spillLeft;
+  const dataViewMaxCoordinate = width - spillRight;
   const total = width;
 
+  const dataViewWidthOrHeight = dataViewMaxCoordinate - dataViewMinCoordinate;
+
+  const maxTotalMiddleLabelsWidth =
+    dataViewWidthOrHeight - firstLabelWidth / 2 - lastLabelWidth / 2;
+  let step = 1;
+  for (step = 1; step <= middle.length; step++) {
+    const widthRequiredForMiddleLabels =
+      computeRequiredWidthForMiddleLabels(step);
+    if (widthRequiredForMiddleLabels < maxTotalMiddleLabelsWidth) {
+      break;
+    }
+  }
+
+  const labelsToInclude: Array<{ label: string; index: number }> = [];
+  for (let index = step; index < labels.length - 1; index += step) {
+    labelsToInclude.push({ index, label: getLabelAtIndex(index) });
+  }
+
+  const middleLabels = labelsToInclude.map(({ label, index }) => {
+    const center =
+      dataViewMinCoordinate +
+      dataViewWidthOrHeight * (index / (labels.length - 1));
+    const minCoordinate = center - labelWidth(label) / 2;
+    return { label, minCoordinate };
+  });
+
   return {
+    dataViewMaxCoordinate,
+    dataViewMinCoordinate,
+    dataViewWidthOrHeight,
     firstLabel,
     lastLabel,
-    max,
-    middle,
-    min,
+    middleLabels,
     total,
   };
 
   function labelWidth(label: string): number {
-    return measurements?.get(label)?.width ?? 0;
+    if (measurements == null) {
+      throw new Error(
+        'labelWidth should not be called if measurements is null',
+      );
+    }
+    const measurement = measurements.get(label);
+    if (measurement == null) {
+      throw new Error('measurement is missing for label: ' + label);
+    }
+    return measurement.width;
   }
 
   function getLabel(index: number): string {
@@ -127,6 +175,22 @@ function getProcessedValues({
     const label = labels[index];
     if (label == null) {
       throw new Error('Label not found at index: ' + index.toString());
+    }
+    return label;
+  }
+
+  function computeRequiredWidthForMiddleLabels(step: number): number {
+    let requiredWidth = 0;
+    for (let index = step; index < labels.length - 1; index += step) {
+      requiredWidth += labelWidth(getLabelAtIndex(index)) + 16;
+    }
+    return requiredWidth;
+  }
+
+  function getLabelAtIndex(index: number): string {
+    const label = labels[index];
+    if (label == null) {
+      throw new Error('Invalid label index: ' + index.toString());
     }
     return label;
   }
