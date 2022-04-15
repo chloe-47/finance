@@ -1,26 +1,38 @@
 import * as React from 'react';
-import type { Coordinates } from 'src/chart/time_series/createCoordinateMapper';
-import createCoordinateMapper from 'src/chart/time_series/createCoordinateMapper';
-import type {
+import type { Offset } from 'src/measurements/LabelArray';
+import type { Coordinates } from 'src/time_series/createCoordinateMapper';
+import createCoordinateMapper from 'src/time_series/createCoordinateMapper';
+import {
+  getCompleteChartSize,
   Point,
   Series,
-  TimeSeriesChartDefinition,
-} from 'src/chart/time_series/SeriesTypes';
-import type { Offset } from 'src/measurements/LabelArray';
+  TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
+} from 'src/time_series/SeriesTypes';
+import type { ValueRange } from './getValueRange';
 
 type Props = {
-  definition: TimeSeriesChartDefinition;
+  definition: TimeSeriesChartDefinitionWithMaybeIncompleteChartSize;
   xOffset: Offset | undefined;
+  yOffset: Offset | undefined;
+  valueRange: ValueRange;
 };
 
 export default function TimeSeriesDataView({
   definition,
   xOffset,
+  yOffset,
+  valueRange,
 }: Props): JSX.Element {
-  const { chartSize, seriesList } = definition;
+  const { chartSize: chartSize_, seriesList } = definition;
+
+  const chartSize = getCompleteChartSize(chartSize_);
+  if (chartSize === undefined) {
+    return <div />;
+  }
+
   const { width, height, pointRadius } = chartSize;
 
-  if (xOffset == null) {
+  if (xOffset === undefined || yOffset === undefined) {
     return (
       <div
         style={{
@@ -32,11 +44,15 @@ export default function TimeSeriesDataView({
   }
 
   const { dataViewMinCoordinate: xMin, dataViewMaxCoordinate: xMax } = xOffset;
+  const { dataViewMinCoordinate: yMin, dataViewMaxCoordinate: yMax } = yOffset;
   const { getCoordinates } = createCoordinateMapper({
     chartSize,
     seriesList,
+    valueRange,
     xMax,
     xMin,
+    yMax,
+    yMin,
   });
 
   return (
@@ -49,9 +65,7 @@ export default function TimeSeriesDataView({
       <svg height={height} width={width}>
         {/* Border */}
         <path
-          d={`M ${xMin},${pointRadius} L ${xMin},${
-            height - pointRadius
-          } L ${xMax},${height - pointRadius} L ${xMax},${pointRadius} Z`}
+          d={`M ${xMin},${yMin} L ${xMin},${yMax} L ${xMax},${yMax} L ${xMax},${yMin} Z`}
           fill="none"
           stroke="rgba(255, 255, 255, 0.2)"
           strokeLinecap="round"
@@ -62,15 +76,15 @@ export default function TimeSeriesDataView({
           const allCoordinates: Array<Coordinates> = [];
           const points = series.points.map((point: Point): JSX.Element => {
             const coordinates = getCoordinates(point);
+            const { cx, cy, r } = coordinates;
             allCoordinates.push(coordinates);
             return (
               <circle
-                {...coordinates}
+                cx={cx.toFixed(2)}
+                cy={cy.toFixed(2)}
                 fill="#daf"
                 key={point.date.getTime().toString()}
-                onMouseEnter={() => {
-                  console.log('mouse enter');
-                }}
+                r={r}
               />
             );
           });

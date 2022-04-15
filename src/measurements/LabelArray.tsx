@@ -9,28 +9,42 @@ export type Offset = {
 };
 
 type Props = {
+  direction: 'right' | 'up';
   labels: Array<string>;
   pointRadius: number;
   setOffset: (offset: Offset) => void;
-  width: number;
+  setStep?: (step: number) => void;
+  widthOrHeight: number;
 };
 
 type ProcessedValues = {
+  crossDimension: number;
   dataViewWidthOrHeight: number;
   dataViewMinCoordinate: number;
   firstLabel: string;
   lastLabel: string;
   dataViewMaxCoordinate: number;
   middleLabels: Array<{ label: string; minCoordinate: number }>;
+  step: number;
   total: number;
 };
 
+type Interval = {
+  min: number;
+  max: number;
+};
+
 export default function LabelArray({
+  direction,
   labels,
   pointRadius,
   setOffset,
-  width,
+  setStep,
+  widthOrHeight,
 }: Props): JSX.Element {
+  const [cachedCrossDimension, setCachedCrossDimension] = React.useState<
+    number | undefined
+  >();
   const measurements = useMeasurements({
     render: (val: string): JSX.Element => <DateLabel label={val} />,
     valToString: (v) => v,
@@ -39,34 +53,52 @@ export default function LabelArray({
 
   const processedValues = React.useMemo((): ProcessedValues | undefined => {
     return getProcessedValues({
+      direction,
       labels,
       measurements,
       pointRadius,
-      width,
+      widthOrHeight,
     });
-  }, [labels, pointRadius, width, measurements]);
+  }, [labels, pointRadius, widthOrHeight, measurements]);
 
   React.useEffect(() => {
     if (processedValues != null) {
-      const { dataViewMinCoordinate, dataViewMaxCoordinate, total } =
+      const { dataViewMinCoordinate, dataViewMaxCoordinate, step, total } =
         processedValues;
+      setCachedCrossDimension(processedValues.crossDimension);
       setOffset({ dataViewMaxCoordinate, dataViewMinCoordinate, total });
+      setStep?.(step);
     }
   }, [processedValues]);
 
   if (processedValues == null) {
-    return <div />;
+    return (
+      <div
+        style={
+          cachedCrossDimension !== undefined
+            ? {
+                [direction === 'right' ? 'height' : 'width']:
+                  cachedCrossDimension,
+              }
+            : {}
+        }
+      />
+    );
   }
 
-  const { firstLabel, lastLabel, middleLabels, total } = processedValues;
+  const { crossDimension, firstLabel, lastLabel, middleLabels, total } =
+    processedValues;
 
   return (
     <div
       style={{
+        alignItems: direction === 'right' ? 'center' : 'flex-end',
         display: 'flex',
+        flexDirection: direction === 'right' ? 'row' : 'column-reverse',
         justifyContent: 'space-between',
         position: 'relative',
-        width: total,
+        [direction === 'right' ? 'width' : 'height']: total,
+        [direction === 'right' ? 'height' : 'width']: crossDimension,
       }}
     >
       <div>{firstLabel}</div>
@@ -75,7 +107,10 @@ export default function LabelArray({
         return (
           <div
             key={label}
-            style={{ left: minCoordinate, position: 'absolute' }}
+            style={{
+              [direction === 'right' ? 'left' : 'bottom']: minCoordinate,
+              position: 'absolute',
+            }}
           >
             {label}
           </div>
@@ -90,12 +125,17 @@ type GetProcessedValuesArgs = Omit<Props, 'setOffset'> & {
 };
 
 function getProcessedValues({
+  direction,
   labels,
   pointRadius,
-  width,
+  widthOrHeight,
   measurements,
 }: GetProcessedValuesArgs): ProcessedValues | undefined {
   if (measurements == null) {
+    return undefined;
+  }
+
+  if (labels.some((l) => !measurements.has(l))) {
     return undefined;
   }
 
@@ -109,53 +149,137 @@ function getProcessedValues({
   const lastLabel = getLabel(labels.length - 1);
   const middle = labels.slice(1, labels.length - 1);
 
-  const firstLabelWidth = labelWidth(firstLabel);
-  const lastLabelWidth = labelWidth(lastLabel);
+  const firstLabelDimension = labelDimension(firstLabel);
+  const lastLabelDimension = labelDimension(lastLabel);
 
-  const spillLeft = Math.max(firstLabelWidth / 2, pointRadius);
-  const spillRight = Math.max(lastLabelWidth / 2, pointRadius);
+  const spillStart = Math.max(firstLabelDimension / 2, pointRadius);
+  const spillEnd = Math.max(lastLabelDimension / 2, pointRadius);
 
-  const dataViewMinCoordinate = spillLeft;
-  const dataViewMaxCoordinate = width - spillRight;
-  const total = width;
+  const dataViewMinCoordinate = spillStart;
+  const dataViewMaxCoordinate = widthOrHeight - spillEnd;
+  const total = widthOrHeight;
 
   const dataViewWidthOrHeight = dataViewMaxCoordinate - dataViewMinCoordinate;
 
-  const maxTotalMiddleLabelsWidth =
-    dataViewWidthOrHeight - firstLabelWidth / 2 - lastLabelWidth / 2;
   let step = 1;
   for (step = 1; step <= middle.length; step++) {
-    const widthRequiredForMiddleLabels =
-      computeRequiredWidthForMiddleLabels(step);
-    if (widthRequiredForMiddleLabels < maxTotalMiddleLabelsWidth) {
+    const intervalsForMiddleLabels = computeIntervalsForMiddleLabels(step);
+    const areAnyLabelsTooClose = computeAreAnyLabelsTooClose(
+      intervalsForMiddleLabels,
+    );
+
+    if (!areAnyLabelsTooClose) {
       break;
     }
   }
 
   const labelsToInclude: Array<{ label: string; index: number }> = [];
   for (let index = step; index < labels.length - 1; index += step) {
-    labelsToInclude.push({ index, label: getLabelAtIndex(index) });
+    labelsToInclude.push({ index, label: getLabel(index) });
   }
 
   const middleLabels = labelsToInclude.map(({ label, index }) => {
-    const center =
-      dataViewMinCoordinate +
-      dataViewWidthOrHeight * (index / (labels.length - 1));
-    const minCoordinate = center - labelWidth(label) / 2;
+    const center = getCenterForIndex(index);
+    const { min: minCoordinate } = getInterval(label, center);
     return { label, minCoordinate };
   });
 
+  function computeIntervalsForMiddleLabels(step: number): Array<Interval> {
+    const intervals: Array<Interval> = [];
+    for (let index = step; index < labels.length - 1; index += step) {
+      const label = getLabel(index);
+      const center = getCenterForIndex(index);
+      intervals.push(getInterval(label, center));
+    }
+    return intervals;
+  }
+
+  function computeAreAnyLabelsTooClose(intervals: Array<Interval>) {
+    for (let i = 0; i < intervals.length; i++) {
+      const interval = intervals[i];
+      if (interval === undefined) {
+        throw new Error('Unexpected undefined');
+      }
+      const { min, max } = interval;
+      if (i === 0) {
+        if (
+          isTooClose({
+            endOfPrevInterval: dataViewMinCoordinate + firstLabelDimension / 2,
+            startOfNextInterval: min,
+          })
+        ) {
+          return true;
+        }
+      } else {
+        if (
+          isTooClose({
+            endOfPrevInterval: intervals[i - 1]?.max ?? 0,
+            startOfNextInterval: min,
+          })
+        ) {
+          return total;
+        }
+      }
+      if (i === intervals.length - 1) {
+        if (
+          isTooClose({
+            endOfPrevInterval: max,
+            startOfNextInterval: dataViewMaxCoordinate - lastLabelDimension / 2,
+          })
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function isTooClose({
+    endOfPrevInterval,
+    startOfNextInterval,
+  }: {
+    endOfPrevInterval: number;
+    startOfNextInterval: number;
+  }): boolean {
+    return startOfNextInterval - endOfPrevInterval < 16;
+  }
+
+  const crossDimension = Math.max(
+    labelCrossDimension(firstLabel),
+    labelCrossDimension(lastLabel),
+    ...middleLabels.map(({ label }) => labelCrossDimension(label)),
+  );
+
   return {
+    crossDimension,
     dataViewMaxCoordinate,
     dataViewMinCoordinate,
     dataViewWidthOrHeight,
     firstLabel,
     lastLabel,
     middleLabels,
+    step,
     total,
   };
 
-  function labelWidth(label: string): number {
+  function labelDimension(label: string): number {
+    return labelDimensionImpl(
+      label,
+      direction === 'right' ? 'width' : 'height',
+    );
+  }
+
+  function labelCrossDimension(label: string): number {
+    return labelDimensionImpl(
+      label,
+      direction === 'right' ? 'height' : 'width',
+    );
+  }
+
+  function labelDimensionImpl(
+    label: string,
+    property: 'height' | 'width',
+  ): number {
     if (measurements == null) {
       throw new Error(
         'labelWidth should not be called if measurements is null',
@@ -165,7 +289,7 @@ function getProcessedValues({
     if (measurement == null) {
       throw new Error('measurement is missing for label: ' + label);
     }
-    return measurement.width;
+    return measurement[property];
   }
 
   function getLabel(index: number): string {
@@ -179,19 +303,15 @@ function getProcessedValues({
     return label;
   }
 
-  function computeRequiredWidthForMiddleLabels(step: number): number {
-    let requiredWidth = 0;
-    for (let index = step; index < labels.length - 1; index += step) {
-      requiredWidth += labelWidth(getLabelAtIndex(index)) + 16;
-    }
-    return requiredWidth;
+  function getCenterForIndex(index: number): number {
+    return (
+      dataViewMinCoordinate +
+      dataViewWidthOrHeight * (index / (labels.length - 1))
+    );
   }
 
-  function getLabelAtIndex(index: number): string {
-    const label = labels[index];
-    if (label == null) {
-      throw new Error('Invalid label index: ' + index.toString());
-    }
-    return label;
+  function getInterval(label: string, center: number): Interval {
+    const dim = labelDimension(label);
+    return { max: center + dim / 2, min: center - dim / 2 };
   }
 }
