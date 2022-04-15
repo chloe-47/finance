@@ -20,6 +20,7 @@ export default function useMeasurements<T>({
   React.useEffect(() => {
     const componentsToMeasure = ComponentsToMeasureStore.getValue();
     if (!componentsToMeasure.has(values)) {
+      setMeasurements(undefined);
       componentsToMeasure.set(
         values,
         createMeasurementSpec() as MeasurementSpec<T> as MeasurementSpec<unknown>,
@@ -42,7 +43,7 @@ export default function useMeasurements<T>({
         values,
       };
     }
-  }, [values]);
+  }, [values.map(valToString).join(':')]);
 
   const timeout = React.useRef<number | undefined>();
   function onMeasure(measurements: Measurements<T>): void {

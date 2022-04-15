@@ -1,8 +1,5 @@
-import type {
-  ChartSize,
-  Point,
-  Series,
-} from 'src/chart/time_series/SeriesTypes';
+import type { ChartSize, Point, Series } from 'src/time_series/SeriesTypes';
+import type { ValueRange } from './getValueRange';
 
 export type Coordinates = {
   cx: number;
@@ -17,36 +14,35 @@ type Mapper = {
 type Args = {
   chartSize: ChartSize;
   seriesList: Array<Series>;
+  valueRange: ValueRange;
   xMax: number;
   xMin: number;
+  yMax: number;
+  yMin: number;
 };
 
 export default function createCoordinateMapper({
   chartSize,
   seriesList,
+  valueRange,
   xMax,
   xMin,
+  yMax,
+  yMin,
 }: Args): Mapper {
   const { height, pointRadius } = chartSize;
   const innerWidth = xMax - xMin;
-  const innerHeight = height - pointRadius * 2;
+  const innerHeight = yMax - yMin;
+  const { minValue, maxValue } = valueRange;
   let minDate: Date = new Date();
   let maxDate: Date = new Date();
-  let minValue = 0;
-  let maxValue = 1;
   seriesList.forEach((series: Series): void => {
-    series.points.forEach(({ date, value }: Point): void => {
+    series.points.forEach(({ date }: Point): void => {
       if (date < minDate) {
         minDate = date;
       }
       if (date > maxDate) {
         maxDate = date;
-      }
-      if (value < minValue) {
-        minValue = value;
-      }
-      if (value > maxValue) {
-        maxValue = value;
       }
     });
   });
@@ -56,15 +52,13 @@ export default function createCoordinateMapper({
   const dateRange = Math.max(maxDateValue - minDateValue, 1000);
   const dateMultiplier = innerWidth / dateRange;
 
-  minValue = minValue * 1.2;
-  maxValue = maxValue * 1.2;
-  const valueRange = maxValue - minValue;
-  const valueMultiplier = innerHeight / valueRange;
+  const valueRangeSize = maxValue - minValue;
+  const valueMultiplier = innerHeight / valueRangeSize;
 
   function getCoordinates({ date, value }: Point): Coordinates {
     return {
       cx: xMin + (date.getTime() - minDateValue) * dateMultiplier,
-      cy: height - pointRadius - (value - minValue) * valueMultiplier,
+      cy: height - yMin - (value - minValue) * valueMultiplier,
       r: pointRadius,
     };
   }

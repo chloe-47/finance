@@ -1,4 +1,4 @@
-import type { Point, Series } from 'src/chart/time_series/SeriesTypes';
+import type { Point, Series } from 'src/time_series/SeriesTypes';
 
 export default function getAllDates(seriesList: Array<Series>): Array<Date> {
   const dateNumbers: Set<number> = new Set();

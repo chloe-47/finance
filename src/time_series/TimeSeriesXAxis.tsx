@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { TimeSeriesChartDefinition } from 'src/chart/time_series/SeriesTypes';
+import type { TimeSeriesChartDefinition } from 'src/time_series/SeriesTypes';
 import getAllDateLabels from 'src/dates/getAllDateLabels';
 import type { Offset } from 'src/measurements/LabelArray';
 import LabelArray from 'src/measurements/LabelArray';
@@ -9,7 +9,7 @@ type Props = {
   setOffset: (offset: Offset) => void;
 };
 
-export default function TimeSeries({
+export default function TimeSeriesXAxis({
   definition,
   setOffset,
 }: Props): JSX.Element {
@@ -22,17 +22,18 @@ export default function TimeSeries({
   return (
     <td
       style={{
-        alignItems: 'center',
+        alignItems: 'flex-end',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
       }}
     >
       <LabelArray
+        direction="right"
         labels={allDateLabels}
         pointRadius={pointRadius}
         setOffset={setOffset}
-        width={width}
+        widthOrHeight={width}
       />
     </td>
   );

@@ -1,5 +1,15 @@
 .App {
+  align-items: center;
   color: #dad;
+  display: flex;
+  flex-direction: column;
   font-family: sans-serif;
   text-align: center;
+}
+
+.column {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }

@@ -1,4 +1,4 @@
-import type { Series } from 'src/chart/time_series/SeriesTypes';
+import type { Series } from 'src/time_series/SeriesTypes';
 import getAllDates from './getAllDates';
 import getDateLabel from './getDateLabel';
 
