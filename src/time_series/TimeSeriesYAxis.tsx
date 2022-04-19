@@ -21,9 +21,12 @@ export default function TimeSeriesYAxis({
   const { chartSize } = definition;
   const { pointRadius, height } = chartSize;
   const allValueLabels = React.useMemo(() => {
-    return valueRange.labelValues.map((val) =>
-      shortValue(val, { noDecimalPoints: true }),
-    );
+    return valueRange.labelValues
+      .map((val) => shortValue(val, { noDecimalPoints: true }))
+      .map((label, index, arr) => ({
+        label,
+        ratio: index / (arr.length - 1),
+      }));
   }, [valueRange]);
 
   if (height === undefined) {
@@ -33,10 +36,7 @@ export default function TimeSeriesYAxis({
   return (
     <LabelArray
       direction="up"
-      labels={allValueLabels.map((label, index, arr) => ({
-        label,
-        ratio: index / (arr.length - 1),
-      }))}
+      labels={allValueLabels}
       pointRadius={pointRadius}
       setOffset={setOffset}
       setStep={setStep}

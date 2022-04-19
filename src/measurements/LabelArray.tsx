@@ -46,10 +46,9 @@ export default function LabelArray({
   const [cachedCrossDimension, setCachedCrossDimension] = React.useState<
     number | undefined
   >();
-  const labelStrings = React.useMemo(
-    () => labels.map(({ label }) => label),
-    [labels],
-  );
+  const labelStrings = React.useMemo(() => {
+    return labels.map(({ label }) => label);
+  }, [labels]);
   const measurements = useMeasurements({
     render: (val: string): JSX.Element => <DateLabel label={val} />,
     valToString: (v) => v,

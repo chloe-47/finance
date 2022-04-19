@@ -20,7 +20,7 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   const [step, setStep] = React.useState<number | undefined>();
   const valueRange = React.useMemo(
     () => getValueRange(definition.seriesData.valuesMinAndMax, step ?? 1),
-    [valueRangeKey(definition.seriesData.seriesList, step)],
+    [valueRangeKey(definition.seriesData.valuesMinAndMax, step)],
   );
   const [xOffset, setXOffset] = React.useState<Offset | undefined>();
   const [yOffset, setYOffset] = React.useState<Offset | undefined>();
@@ -32,7 +32,9 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   const dataViewDefinition = useSubtractWidth(withoutXAxisHeight, yAxisWidth);
   const xAxisDefinition = useSubtractWidthOrUseDefault(definition, yAxisWidth);
   React.useEffect(() => {
-    setTimeout(() => setReady(step !== undefined));
+    setTimeout(() => {
+      setReady(step !== undefined);
+    });
   }, [step]);
 
   return (

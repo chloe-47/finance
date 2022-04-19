@@ -1,4 +1,3 @@
-import type { Point, Series } from 'src/time_series/SeriesTypes';
 import getLabelValues from './getLabelValues';
 import type { ValuesMinAndMax } from './ValuesMinAndMax';
 
@@ -23,20 +22,8 @@ export default function getValueRange(
 }
 
 export function valueRangeKey(
-  seriesList: ReadonlyArray<Series>,
+  { min, max }: ValuesMinAndMax,
   step: number | undefined,
 ): string {
-  let minValue = 0;
-  let maxValue = 0;
-  seriesList.forEach(({ points }: Series): void => {
-    points.forEach(({ value }: Point): void => {
-      if (value < minValue) {
-        minValue = value;
-      }
-      if (value > maxValue) {
-        maxValue = value;
-      }
-    });
-  });
-  return `${minValue}:${maxValue}:${step ?? 'undefined'}`;
+  return `${min}:${max}:${step ?? 'undefined'}`;
 }

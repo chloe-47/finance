@@ -21,15 +21,17 @@ export default function useMeasureElement<
     if (r != null) {
       const newWidth = r.clientWidth;
       const newHeight = r.clientHeight;
+      const setWidthAndHeight = (): void => {
+        setWidth(newWidth);
+        setHeight(newHeight);
+      };
       clearTimeout(debounceZeroesRef?.current);
       if (width === 0 || (height === 0 && debounceZeroes)) {
         debounceZeroesRef.current = setTimeout(() => {
-          setWidth(newWidth);
-          setHeight(newHeight);
-        }, 500) as unknown as number;
+          setWidthAndHeight();
+        }, 0) as unknown as number;
       } else {
-        setWidth(newWidth);
-        setHeight(newHeight);
+        setWidthAndHeight();
       }
     }
   };
