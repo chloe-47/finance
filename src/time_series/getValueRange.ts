@@ -1,5 +1,6 @@
 import type { Point, Series } from 'src/time_series/SeriesTypes';
 import getLabelValues from './getLabelValues';
+import type { ValuesMinAndMax } from './ValuesMinAndMax';
 
 export type ValueRange = {
   labelValues: Array<number>;
@@ -8,29 +9,11 @@ export type ValueRange = {
 };
 
 export default function getValueRange(
-  seriesList: Array<Series>,
+  valuesMinAndMax: ValuesMinAndMax,
   step: number,
 ): ValueRange {
-  let minValue = 0;
-  let maxValue = 0;
-  seriesList.forEach(({ points }: Series): void => {
-    points.forEach(({ value }: Point): void => {
-      if (value < minValue) {
-        minValue = value;
-      }
-      if (value > maxValue) {
-        maxValue = value;
-      }
-    });
-  });
-  if (minValue !== 0) {
-    throw new Error('getValueRange does not support negative values');
-  }
-  const notRounded = {
-    maxValue,
-    minValue,
-  };
-  const labelValues = getLabelValues(notRounded, step);
+  const { min: minValue, max: maxValue } = valuesMinAndMax;
+  const labelValues = getLabelValues({ maxValue, minValue }, step);
   const maxLabelValue = Math.max(...labelValues);
   return {
     labelValues,
@@ -40,7 +23,7 @@ export default function getValueRange(
 }
 
 export function valueRangeKey(
-  seriesList: Array<Series>,
+  seriesList: ReadonlyArray<Series>,
   step: number | undefined,
 ): string {
   let minValue = 0;

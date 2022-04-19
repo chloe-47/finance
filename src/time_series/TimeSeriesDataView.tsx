@@ -4,7 +4,6 @@ import type { Coordinates } from 'src/time_series/createCoordinateMapper';
 import createCoordinateMapper from 'src/time_series/createCoordinateMapper';
 import {
   getCompleteChartSize,
-  Point,
   Series,
   TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
 } from 'src/time_series/SeriesTypes';
@@ -23,7 +22,7 @@ export default function TimeSeriesDataView({
   yOffset,
   valueRange,
 }: Props): JSX.Element {
-  const { chartSize: chartSize_, seriesList } = definition;
+  const { chartSize: chartSize_, dateRange, seriesData } = definition;
 
   const chartSize = getCompleteChartSize(chartSize_);
   if (chartSize === undefined) {
@@ -47,7 +46,7 @@ export default function TimeSeriesDataView({
   const { dataViewMinCoordinate: yMin, dataViewMaxCoordinate: yMax } = yOffset;
   const { getCoordinates } = createCoordinateMapper({
     chartSize,
-    seriesList,
+    dateRange,
     valueRange,
     xMax,
     xMin,
@@ -72,29 +71,12 @@ export default function TimeSeriesDataView({
           strokeLinejoin="round"
           strokeWidth={1}
         />
-        {seriesList.map((series: Series): JSX.Element => {
-          const allCoordinates: Array<Coordinates> = [];
-          const points = series.points.map((point: Point): JSX.Element => {
-            const coordinates = getCoordinates(point);
-            const { cx, cy, r } = coordinates;
-            allCoordinates.push(coordinates);
-            return (
-              <circle
-                cx={cx.toFixed(2)}
-                cy={cy.toFixed(2)}
-                fill="#daf"
-                key={point.date.getTime().toString()}
-                r={r}
-              />
-            );
-          });
-          const path = createPath(allCoordinates, pointRadius);
-          return (
-            <svg key={series.label}>
-              {path}
-              {points}
-            </svg>
+        {seriesData.seriesList.map((series: Series): JSX.Element => {
+          const path = createPath(
+            series.points.map(getCoordinates),
+            pointRadius,
           );
+          return <svg key={series.label}>{path}</svg>;
         })}
       </svg>
     </div>

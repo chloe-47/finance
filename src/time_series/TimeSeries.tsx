@@ -19,8 +19,8 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   const [ready, setReady] = React.useState<boolean>(false);
   const [step, setStep] = React.useState<number | undefined>();
   const valueRange = React.useMemo(
-    () => getValueRange(definition.seriesList, step ?? 1),
-    [valueRangeKey(definition.seriesList, step)],
+    () => getValueRange(definition.seriesData.valuesMinAndMax, step ?? 1),
+    [valueRangeKey(definition.seriesData.seriesList, step)],
   );
   const [xOffset, setXOffset] = React.useState<Offset | undefined>();
   const [yOffset, setYOffset] = React.useState<Offset | undefined>();

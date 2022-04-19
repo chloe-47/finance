@@ -1,8 +1,7 @@
 import * as React from 'react';
-import type { TimeSeriesChartDefinition } from 'src/time_series/SeriesTypes';
-import getAllDateLabels from 'src/dates/getAllDateLabels';
 import type { Offset } from 'src/measurements/LabelArray';
 import LabelArray from 'src/measurements/LabelArray';
+import type { TimeSeriesChartDefinition } from 'src/time_series/SeriesTypes';
 
 type Props = {
   definition: TimeSeriesChartDefinition;
@@ -13,11 +12,8 @@ export default function TimeSeriesXAxis({
   definition,
   setOffset,
 }: Props): JSX.Element {
-  const { chartSize, seriesList } = definition;
+  const { chartSize } = definition;
   const { pointRadius, width } = chartSize;
-  const allDateLabels = React.useMemo(() => {
-    return getAllDateLabels(seriesList);
-  }, []);
 
   return (
     <td
@@ -30,7 +26,7 @@ export default function TimeSeriesXAxis({
     >
       <LabelArray
         direction="right"
-        labels={allDateLabels}
+        labels={definition.dateRange.labels}
         pointRadius={pointRadius}
         setOffset={setOffset}
         widthOrHeight={width}
