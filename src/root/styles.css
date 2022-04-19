@@ -13,3 +13,8 @@
   flex-direction: column;
   position: relative;
 }
+
+.invisible {
+  opacity: 0;
+  pointer-events: none;
+}

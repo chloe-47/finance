@@ -8,11 +8,15 @@ export default function getDateLabel(date: Date): string {
 }
 
 function getDateLabelImpl(date: Date): string {
-  return (
-    // date.toLocaleDateString('en-US', { day: 'numeric' }) +
-    // '-' +
-    date.toLocaleDateString('en-US', { month: 'numeric' }) +
-    '/' +
-    date.toLocaleDateString('en-US', { year: '2-digit' })
-  );
+  if (date.getMonth() === 1) {
+    return (
+      // date.toLocaleDateString('en-US', { day: 'numeric' }) +
+      // '-' +
+      // date.toLocaleDateString('en-US', { month: 'numeric' }) +
+      // '/' +
+      "'" + date.toLocaleDateString('en-US', { year: '2-digit' })
+    );
+  } else {
+    return '';
+  }
 }

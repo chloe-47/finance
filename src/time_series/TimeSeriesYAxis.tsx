@@ -1,7 +1,7 @@
 import * as React from 'react';
-import type { TimeSeriesChartDefinitionWithMaybeIncompleteChartSize } from 'src/time_series/SeriesTypes';
 import type { Offset } from 'src/measurements/LabelArray';
 import LabelArray from 'src/measurements/LabelArray';
+import type { TimeSeriesChartDefinitionWithMaybeIncompleteChartSize } from 'src/time_series/SeriesTypes';
 import shortValue from 'src/values/shortValue';
 import type { ValueRange } from './getValueRange';
 
@@ -33,7 +33,10 @@ export default function TimeSeriesYAxis({
   return (
     <LabelArray
       direction="up"
-      labels={allValueLabels}
+      labels={allValueLabels.map((label, index, arr) => ({
+        label,
+        ratio: index / (arr.length - 1),
+      }))}
       pointRadius={pointRadius}
       setOffset={setOffset}
       setStep={setStep}

@@ -1,5 +1,9 @@
+import type DateRange from 'src/dates/DateRange';
+import type Date_ from 'src/dates/Date_';
+import type SeriesData from './SeriesData';
+
 export type Point = {
-  date: Date;
+  date: Date_;
   value: number;
 };
 
@@ -22,7 +26,8 @@ export type MaybeIncompleteChartSize = {
 
 export type TimeSeriesChartDefinition = {
   chartSize: ChartSize;
-  seriesList: Array<Series>;
+  dateRange: DateRange;
+  seriesData: SeriesData;
 };
 
 export type TimeSeriesChartDefinitionWithMaybeIncompleteChartSize = Omit<

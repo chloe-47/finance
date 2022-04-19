@@ -1,5 +1,6 @@
 import * as React from 'react';
 import DateLabel from 'src/dates/DateLabel';
+import type { LabelSpec } from 'src/dates/DateRange';
 import useMeasurements from 'src/measurements/useMeasurements';
 
 export type Offset = {
@@ -10,7 +11,7 @@ export type Offset = {
 
 type Props = {
   direction: 'right' | 'up';
-  labels: Array<string>;
+  labels: ReadonlyArray<LabelSpec>;
   pointRadius: number;
   setOffset: (offset: Offset) => void;
   setStep?: (step: number) => void;
@@ -24,7 +25,7 @@ type ProcessedValues = {
   firstLabel: string;
   lastLabel: string;
   dataViewMaxCoordinate: number;
-  middleLabels: Array<{ label: string; minCoordinate: number }>;
+  labelsToRender: Array<{ label: string; minCoordinate: number }>;
   step: number;
   total: number;
 };
@@ -45,10 +46,14 @@ export default function LabelArray({
   const [cachedCrossDimension, setCachedCrossDimension] = React.useState<
     number | undefined
   >();
+  const labelStrings = React.useMemo(
+    () => labels.map(({ label }) => label),
+    [labels],
+  );
   const measurements = useMeasurements({
     render: (val: string): JSX.Element => <DateLabel label={val} />,
     valToString: (v) => v,
-    values: labels,
+    values: labelStrings,
   });
 
   const processedValues = React.useMemo((): ProcessedValues | undefined => {
@@ -86,7 +91,7 @@ export default function LabelArray({
     );
   }
 
-  const { crossDimension, firstLabel, lastLabel, middleLabels, total } =
+  const { crossDimension, firstLabel, lastLabel, labelsToRender, total } =
     processedValues;
 
   return (
@@ -101,9 +106,9 @@ export default function LabelArray({
         [direction === 'right' ? 'height' : 'width']: crossDimension,
       }}
     >
-      <div>{firstLabel}</div>
-      <div>{lastLabel}</div>
-      {middleLabels.map(({ label, minCoordinate }) => {
+      <div className="invisible">{firstLabel}</div>
+      <div className="invisible">{lastLabel}</div>
+      {labelsToRender.map(({ label, minCoordinate }) => {
         return (
           <div
             key={label}
@@ -135,7 +140,7 @@ function getProcessedValues({
     return undefined;
   }
 
-  if (labels.some((l) => !measurements.has(l))) {
+  if (labels.some(({ label }) => !measurements.has(label))) {
     return undefined;
   }
 
@@ -147,7 +152,6 @@ function getProcessedValues({
 
   const firstLabel = getLabel(0);
   const lastLabel = getLabel(labels.length - 1);
-  const middle = labels.slice(1, labels.length - 1);
 
   const firstLabelDimension = labelDimension(firstLabel);
   const lastLabelDimension = labelDimension(lastLabel);
@@ -162,7 +166,7 @@ function getProcessedValues({
   const dataViewWidthOrHeight = dataViewMaxCoordinate - dataViewMinCoordinate;
 
   let step = 1;
-  for (step = 1; step <= middle.length; step++) {
+  for (step = 1; step < labels.length; step++) {
     const intervalsForMiddleLabels = computeIntervalsForMiddleLabels(step);
     const areAnyLabelsTooClose = computeAreAnyLabelsTooClose(
       intervalsForMiddleLabels,
@@ -174,11 +178,11 @@ function getProcessedValues({
   }
 
   const labelsToInclude: Array<{ label: string; index: number }> = [];
-  for (let index = step; index < labels.length - 1; index += step) {
+  for (let index = 0; index < labels.length; index += step) {
     labelsToInclude.push({ index, label: getLabel(index) });
   }
 
-  const middleLabels = labelsToInclude.map(({ label, index }) => {
+  const labelsToRender = labelsToInclude.map(({ label, index }) => {
     const center = getCenterForIndex(index);
     const { min: minCoordinate } = getInterval(label, center);
     return { label, minCoordinate };
@@ -245,9 +249,7 @@ function getProcessedValues({
   }
 
   const crossDimension = Math.max(
-    labelCrossDimension(firstLabel),
-    labelCrossDimension(lastLabel),
-    ...middleLabels.map(({ label }) => labelCrossDimension(label)),
+    ...labels.map(({ label }) => labelCrossDimension(label)),
   );
 
   return {
@@ -256,8 +258,8 @@ function getProcessedValues({
     dataViewMinCoordinate,
     dataViewWidthOrHeight,
     firstLabel,
+    labelsToRender,
     lastLabel,
-    middleLabels,
     step,
     total,
   };
@@ -293,6 +295,10 @@ function getProcessedValues({
   }
 
   function getLabel(index: number): string {
+    return getLabelSpec(index).label;
+  }
+
+  function getLabelSpec(index: number): LabelSpec {
     if (!(index >= 0 && index < labels.length)) {
       throw new Error('Invalid label index: ' + index.toString());
     }
@@ -305,8 +311,7 @@ function getProcessedValues({
 
   function getCenterForIndex(index: number): number {
     return (
-      dataViewMinCoordinate +
-      dataViewWidthOrHeight * (index / (labels.length - 1))
+      dataViewMinCoordinate + dataViewWidthOrHeight * getLabelSpec(index).ratio
     );
   }
 

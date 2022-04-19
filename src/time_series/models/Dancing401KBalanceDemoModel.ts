@@ -1,4 +1,5 @@
-import addMonths from 'src/dates/addMonths';
+import DateRange from 'src/dates/DateRange';
+import SeriesData from '../SeriesData';
 import type { Point, Series, TimeSeriesChartDefinition } from '../SeriesTypes';
 import createModel from './createModel';
 import type { TimeSeriesModel } from './TimeSeriesModel';
@@ -13,40 +14,33 @@ export default function Dancing401KBalanceDemoModel(): TimeSeriesModel {
   return model;
 
   function getInitialState(): TimeSeriesChartDefinition {
+    const dateRange = DateRange.nextYears(10);
+    const seriesData = new SeriesData([
+      {
+        label: '401k balance',
+        points: dateRange.dates.map((date) => ({
+          date,
+          value: 100000 + Math.random() * 10000,
+        })),
+      },
+    ]);
     return {
       chartSize: {
         height: 400,
-        pointRadius: 4,
+        pointRadius: 1,
         width: 600,
       },
-      seriesList: [
-        {
-          label: '401k balance',
-          points: [
-            142000, 144500, 147500, 151000, 155000, 142000, 129000, 119000,
-            112000, 105000, 105500, 106500, 108000, 109000, 111000, 115000,
-            115000, 242000, 144500, 147500, 151000, 155000, 142000, 129000,
-            119000, 112000, 105000, 105500, 106500, 108000, 109000, 111000,
-            115000, 115000, 115000, 242000, 144500, 147500, 151000, 155000,
-            142000, 129000, 119000, 112000, 105000, 105500, 106500, 108000,
-            109000, 111000, 115000, 115000,
-          ].map(
-            (value: number, index): Point => ({
-              date: addMonths(new Date(), index),
-              value,
-            }),
-          ),
-        },
-      ],
+      dateRange,
+      seriesData,
     };
   }
 
   function updater(
     value: TimeSeriesChartDefinition,
   ): TimeSeriesChartDefinition {
-    const { seriesList, ...rest } = value;
-    const updatedSeriesList = seriesList.map(fuzzSeries);
-    return { seriesList: updatedSeriesList, ...rest };
+    const { seriesData, ...rest } = value;
+    const updatedSeriesList = seriesData.seriesList.map(fuzzSeries);
+    return { seriesData: new SeriesData(updatedSeriesList), ...rest };
   }
 }
 
