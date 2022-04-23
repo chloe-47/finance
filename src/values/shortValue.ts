@@ -23,7 +23,9 @@ export default function shortValue(value: number, options?: Options): string {
   function withMultiplierSuffix(divisor: number, suffix: string): string {
     const quotient = value / divisor;
     const points = !decimalPoints
-      ? 0
+      ? quotient < 2
+        ? 1
+        : 0
       : quotient < 10
       ? 2
       : quotient < 100

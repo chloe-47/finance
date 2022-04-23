@@ -12,24 +12,37 @@ export default function App() {
     () =>
       new FinanceSystem({
         initialState: {
-          cash: 50e3,
+          cash: 227e3,
+          components: [
+            {
+              apr: '3.625%',
+              balance: 816657.88,
+              fixedMonthlyPayment: 4308.77,
+              insurancePerYear: 2773.0,
+              taxPerSixMonths: 5190.1,
+              type: 'Mortgage',
+            },
+          ],
           jobs: [],
-          monthlyExpenses: 10e3,
+          monthlyExpenses: 6e3,
         },
         rules: [
           {
             action: [
               'Start job',
-              new Job({ annualSalary: 250e3, name: 'Arbitrary tech job' }),
+              new Job({ annualSalary: 200e3, name: 'Arbitrary tech job' }),
             ],
-            trigger: [['Cash <=', 30e3], 'and', 'unemployed'],
+            trigger: [['Cash <=', 100e3], 'and', 'unemployed'],
           },
           {
             action: 'Quit all jobs',
-            trigger: ['Cash >=', 200e3],
+            trigger: ['Cash >=', 1e6],
           },
         ],
-        yearsAhead: 10,
+        timeSpan: {
+          currentAge: 27,
+          deadAt: 85,
+        },
       }).resolve(),
     [],
   );

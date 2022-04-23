@@ -6,33 +6,38 @@ import type { FinanceStateProps } from './FinanceStateProps';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 import TimeSeriesTopLevelConfigBuilder from './TimeSeriesTopLevelConfigBuilder';
 
-type Args = {
+type Props = {
   initialState: FinanceStateProps;
   rules: ReadonlyArray<FinanceRule>;
-  yearsAhead: number;
+  timeSpan: {
+    currentAge: number;
+    deadAt: number;
+  };
 };
 
 export default class FinanceSystem {
-  args: Args;
+  props: Props;
   timeSeriesConfigs: ReadonlyArray<TimeSeriesTopLevelConfig> = [];
 
-  constructor(args: Args) {
-    this.args = args;
+  constructor(props: Props) {
+    this.props = props;
   }
 
   resolve(): this {
-    const dateRange = DateRange.nextYears(this.args.yearsAhead);
+    const { deadAt, currentAge } = this.props.timeSpan;
+    const yearsAhead = deadAt - currentAge + 1;
+    const dateRange = DateRange.nextYears(yearsAhead);
     const builders = [
       builder('Cash', (state) => state.cash),
       builder('Expenses', (state) => state.monthlyExpenses),
       builder('Income', (state) => state.monthlyIncome),
     ];
 
-    let state: FinanceState = new FinanceState(this.args.initialState);
+    let state: FinanceState = new FinanceState(this.props.initialState);
 
     dateRange.dates.forEach((date: Date_): void => {
       builders.forEach((builder) => builder.addPoint(date, state));
-      state = state.getNextState(this.args.rules);
+      state = state.getNextState(this.props.rules);
     });
 
     this.timeSeriesConfigs = builders.map((builder) =>

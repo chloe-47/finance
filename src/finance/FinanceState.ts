@@ -1,13 +1,18 @@
 import { applyAction } from './Action';
+import createComponentObject from './components/createComponentObject';
+import type { FinanceStateComponentObject } from './components/FinanceStateComponent';
 import type { FinanceRule } from './FinanceRule';
 import type { FinanceStateProps } from './FinanceStateProps';
+import subtractFederalIncomeTax from './subtractFederalIncomeTax';
 import { shouldTriggerActivate } from './Trigger';
 
 export default class FinanceState {
   readonly props: FinanceStateProps;
+  readonly components: ReadonlyArray<FinanceStateComponentObject>;
 
   constructor(props: FinanceStateProps) {
     this.props = props;
+    this.components = props.components.map(createComponentObject);
   }
 
   get cash(): number {
@@ -15,20 +20,38 @@ export default class FinanceState {
   }
 
   get monthlyExpenses(): number {
-    return this.props.monthlyExpenses;
+    let thisMonthsExpenses = this.props.monthlyExpenses;
+    let nextCash = this.props.cash - thisMonthsExpenses + this.monthlyIncome;
+    this.components.forEach((component): void => {
+      const expenseAmount = component.getExpensesAmount(nextCash);
+      nextCash -= expenseAmount;
+      thisMonthsExpenses += expenseAmount;
+    });
+    return thisMonthsExpenses;
   }
 
   get monthlyIncome(): number {
-    return this.props.jobs.reduce(
+    const preTaxIncome = this.props.jobs.reduce(
       (acc, { monthlyIncome }) => acc + monthlyIncome,
       0,
     );
+    return subtractFederalIncomeTax({ monthlyIncome: preTaxIncome });
   }
 
   getNextState(rules: ReadonlyArray<FinanceRule>): FinanceState {
-    const cash = this.cash - this.monthlyExpenses + this.monthlyIncome;
+    let thisMonthsExpenses = this.props.monthlyExpenses;
+    let nextCash = this.props.cash - thisMonthsExpenses + this.monthlyIncome;
+    const nextComponents = this.components.map((component) => {
+      const expenseAmount = component.getExpensesAmount(nextCash);
+      const updatedComponent = component.getNextState(nextCash);
+      nextCash -= expenseAmount;
+      thisMonthsExpenses += expenseAmount;
+      return updatedComponent.asProps();
+    });
+
     let nextProps: FinanceStateProps = {
-      cash,
+      cash: nextCash,
+      components: nextComponents,
       jobs: this.props.jobs,
       monthlyExpenses: this.props.monthlyExpenses,
     };
