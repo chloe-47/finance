@@ -1,5 +1,5 @@
 export default class Date_ {
-  date: Readonly<Date>;
+  readonly date: Readonly<Date>;
 
   constructor(d: Date) {
     const date = new Date(d.valueOf());

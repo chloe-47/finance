@@ -1,11 +1,11 @@
 import getLabelValues from './getLabelValues';
 import type { ValuesMinAndMax } from './ValuesMinAndMax';
 
-export type ValueRange = {
+export type ValueRange = Readonly<{
   labelValues: Array<number>;
   minValue: number;
   maxValue: number;
-};
+}>;
 
 export default function getValueRange(
   valuesMinAndMax: ValuesMinAndMax,

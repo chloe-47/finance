@@ -5,12 +5,12 @@ import type { TimeSeriesChartDefinitionWithMaybeIncompleteChartSize } from 'src/
 import shortValue from 'src/values/shortValue';
 import type { ValueRange } from './getValueRange';
 
-type Props = {
+type Props = Readonly<{
   definition: TimeSeriesChartDefinitionWithMaybeIncompleteChartSize;
   setOffset: (offset: Offset) => void;
   setStep: (step: number) => void;
   valueRange: ValueRange;
-};
+}>;
 
 export default function TimeSeriesYAxis({
   definition,

@@ -3,37 +3,39 @@ import DateLabel from 'src/dates/DateLabel';
 import type { LabelSpec } from 'src/dates/DateRange';
 import useMeasurements from 'src/measurements/useMeasurements';
 
-export type Offset = {
+export type Offset = Readonly<{
   dataViewMinCoordinate: number;
   dataViewMaxCoordinate: number;
   total: number;
-};
+}>;
 
-type Props = {
+type Props = Readonly<{
   direction: 'right' | 'up';
   labels: ReadonlyArray<LabelSpec>;
   pointRadius: number;
   setOffset: (offset: Offset) => void;
   setStep?: (step: number) => void;
   widthOrHeight: number;
-};
+}>;
 
-type ProcessedValues = {
+type ProcessedValues = Readonly<{
   crossDimension: number;
   dataViewWidthOrHeight: number;
   dataViewMinCoordinate: number;
   firstLabel: string;
   lastLabel: string;
   dataViewMaxCoordinate: number;
-  labelsToRender: Array<{ label: string; minCoordinate: number }>;
+  labelsToRender: ReadonlyArray<
+    Readonly<{ label: string; minCoordinate: number }>
+  >;
   step: number;
   total: number;
-};
+}>;
 
-type Interval = {
+type Interval = Readonly<{
   min: number;
   max: number;
-};
+}>;
 
 export default function LabelArray({
   direction,

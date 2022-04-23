@@ -2,8 +2,8 @@ import * as React from 'react';
 import type { Offset } from 'src/measurements/LabelArray';
 import useMeasureElement from 'src/measurements/useMeasureElement';
 import type {
-  TimeSeriesChartDefinition,
   TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
+  TimeSeriesChartDefinitionWithViewProps,
 } from 'src/time_series/SeriesTypes';
 import TimeSeriesDataView from 'src/time_series/TimeSeriesDataView';
 import 'src/time_series/TimeSeriesStyles.css';
@@ -11,9 +11,9 @@ import TimeSeriesXAxis from 'src/time_series/TimeSeriesXAxis';
 import getValueRange, { valueRangeKey } from './getValueRange';
 import TimeSeriesYAxis from './TimeSeriesYAxis';
 
-type Props = {
-  definition: TimeSeriesChartDefinition;
-};
+type Props = Readonly<{
+  definition: TimeSeriesChartDefinitionWithViewProps;
+}>;
 
 export default function TimeSeries({ definition }: Props): JSX.Element {
   const [ready, setReady] = React.useState<boolean>(false);
@@ -28,9 +28,16 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   const { ref: measureYAxisRef, width: yAxisWidth } = useMeasureElement({
     debounceZeroes: true,
   });
+  const { ref: measureLabelRef, width: labelWidth } = useMeasureElement();
   const withoutXAxisHeight = useSubtractHeight(definition, xAxisHeight);
-  const dataViewDefinition = useSubtractWidth(withoutXAxisHeight, yAxisWidth);
-  const xAxisDefinition = useSubtractWidthOrUseDefault(definition, yAxisWidth);
+  const dataViewDefinition = useSubtractWidth(
+    useSubtractWidth(withoutXAxisHeight, yAxisWidth),
+    labelWidth,
+  );
+  const xAxisDefinition = useSubtractWidthOrUseDefault(
+    useSubtractWidthOrUseDefault(definition, yAxisWidth),
+    labelWidth,
+  );
   React.useEffect(() => {
     setTimeout(() => {
       setReady(step !== undefined);
@@ -38,35 +45,48 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   }, [step]);
 
   return (
-    <table className="TimeSeries" style={!ready ? { opacity: 0 } : {}}>
-      <tbody>
-        <tr>
-          <td ref={measureYAxisRef}>
-            <TimeSeriesYAxis
-              definition={withoutXAxisHeight}
-              setOffset={setYOffset}
-              setStep={setStep}
-              valueRange={valueRange}
-            />
-          </td>
-          <td>
-            <TimeSeriesDataView
-              definition={dataViewDefinition}
-              valueRange={valueRange}
-              xOffset={xOffset}
-              yOffset={yOffset}
-            />
-          </td>
-        </tr>
-        <tr ref={measureXAxisRef}>
-          <td></td>
+    <>
+      <tr style={ready ? {} : { opacity: 0 }}>
+        <td className="label" ref={measureLabelRef}>
+          {definition.label}
+        </td>
+        <td className="y-axis" ref={measureYAxisRef}>
+          <TimeSeriesYAxis
+            definition={withoutXAxisHeight}
+            setOffset={setYOffset}
+            setStep={setStep}
+            valueRange={valueRange}
+          />
+        </td>
+        <td>
+          <TimeSeriesDataView
+            definition={dataViewDefinition}
+            valueRange={valueRange}
+            xOffset={xOffset}
+            yOffset={yOffset}
+          />
+        </td>
+      </tr>
+      <tr style={ready ? {} : { opacity: 0 }}>
+        <td></td>
+        <td></td>
+        <td
+          ref={measureXAxisRef}
+          style={{
+            alignItems: 'flex-end',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+          }}
+        >
           <TimeSeriesXAxis
             definition={xAxisDefinition}
             setOffset={setXOffset}
           />
-        </tr>
-      </tbody>
-    </table>
+        </td>
+      </tr>
+      <tr className="spacer"></tr>
+    </>
   );
 }
 
@@ -109,9 +129,9 @@ function useSubtractWidth(
 }
 
 function useSubtractWidthOrUseDefault(
-  definition: TimeSeriesChartDefinition,
+  definition: TimeSeriesChartDefinitionWithViewProps,
   toSubtract: number | undefined,
-): TimeSeriesChartDefinition {
+): TimeSeriesChartDefinitionWithViewProps {
   return React.useMemo(
     () => ({
       ...definition,

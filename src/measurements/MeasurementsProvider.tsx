@@ -6,20 +6,30 @@ import ComponentsToMeasureStore, {
 } from './ComponentsToMeasureStore';
 
 export default function MeasurementsProvider(): JSX.Element {
-  const specs = useStore(ComponentsToMeasureStore);
+  const allSpecs = useStore(ComponentsToMeasureStore);
   return (
     <div style={{ position: 'relative' }}>
       <div
         style={{ opacity: 0, position: 'absolute', top: -1000, width: 10000 }}
       >
-        {Array.from(specs.values()).map(({ valToString, values, ...rest }) => (
-          <MeasureContainer
-            {...rest}
-            key={values.map(valToString).join(';')}
-            valToString={valToString}
-            values={values}
-          />
-        ))}
+        {Array.from(allSpecs.values()).map(
+          (specs: Set<MeasurementSpec<unknown>>) => {
+            const { values, render, valToString } = Array.from(
+              specs,
+            )[0] as unknown as MeasurementSpec<unknown>;
+            return (
+              <MeasureContainer
+                key={values.map(valToString).join(';')}
+                onMeasure={(...args) =>
+                  specs.forEach(({ onMeasure }) => onMeasure(...args))
+                }
+                render={render}
+                valToString={valToString}
+                values={values}
+              />
+            );
+          },
+        )}
       </div>
     </div>
   );

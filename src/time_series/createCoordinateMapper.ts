@@ -2,17 +2,17 @@ import type DateRange from 'src/dates/DateRange';
 import type { ChartSize, Point } from 'src/time_series/SeriesTypes';
 import type { ValueRange } from './getValueRange';
 
-export type Coordinates = {
+export type Coordinates = Readonly<{
   cx: number;
   cy: number;
   r: number;
-};
+}>;
 
-type Mapper = {
+type Mapper = Readonly<{
   getCoordinates: (point: Point) => Coordinates;
-};
+}>;
 
-type Args = {
+type Args = Readonly<{
   chartSize: ChartSize;
   dateRange: DateRange;
   valueRange: ValueRange;
@@ -20,7 +20,7 @@ type Args = {
   xMin: number;
   yMax: number;
   yMin: number;
-};
+}>;
 
 export default function createCoordinateMapper({
   chartSize,

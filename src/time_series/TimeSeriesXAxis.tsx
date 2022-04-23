@@ -1,12 +1,12 @@
 import * as React from 'react';
 import type { Offset } from 'src/measurements/LabelArray';
 import LabelArray from 'src/measurements/LabelArray';
-import type { TimeSeriesChartDefinition } from 'src/time_series/SeriesTypes';
+import type { TimeSeriesChartDefinitionWithViewProps } from 'src/time_series/SeriesTypes';
 
-type Props = {
-  definition: TimeSeriesChartDefinition;
+type Props = Readonly<{
+  definition: TimeSeriesChartDefinitionWithViewProps;
   setOffset: (offset: Offset) => void;
-};
+}>;
 
 export default function TimeSeriesXAxis({
   definition,
@@ -16,21 +16,12 @@ export default function TimeSeriesXAxis({
   const { pointRadius, width } = chartSize;
 
   return (
-    <td
-      style={{
-        alignItems: 'flex-end',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
-      <LabelArray
-        direction="right"
-        labels={definition.dateRange.labels}
-        pointRadius={pointRadius}
-        setOffset={setOffset}
-        widthOrHeight={width}
-      />
-    </td>
+    <LabelArray
+      direction="right"
+      labels={definition.dateRange.labels}
+      pointRadius={pointRadius}
+      setOffset={setOffset}
+      widthOrHeight={width}
+    />
   );
 }
