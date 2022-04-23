@@ -9,12 +9,12 @@ import {
 } from 'src/time_series/SeriesTypes';
 import type { ValueRange } from './getValueRange';
 
-type Props = {
+type Props = Readonly<{
   definition: TimeSeriesChartDefinitionWithMaybeIncompleteChartSize;
   xOffset: Offset | undefined;
   yOffset: Offset | undefined;
   valueRange: ValueRange;
-};
+}>;
 
 export default function TimeSeriesDataView({
   definition,

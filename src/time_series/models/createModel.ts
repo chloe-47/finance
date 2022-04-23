@@ -1,9 +1,9 @@
 import type { TimeSeriesChartDefinition } from '../SeriesTypes';
 import type { Listener, TimeSeriesModel } from './TimeSeriesModel';
 
-type Args = {
+type Props = Readonly<{
   initial: TimeSeriesChartDefinition;
-};
+}>;
 
 type Updater = (
   oldValue: TimeSeriesChartDefinition,
@@ -14,7 +14,7 @@ type Return = {
   update: (updater: Updater) => void;
 };
 
-export default function createModel({ initial }: Args): Return {
+export default function createModel({ initial }: Props): Return {
   const listeners: Set<Listener> = new Set();
   let value: TimeSeriesChartDefinition = initial;
 

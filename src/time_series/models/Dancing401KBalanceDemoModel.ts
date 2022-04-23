@@ -25,12 +25,8 @@ export default function Dancing401KBalanceDemoModel(): TimeSeriesModel {
       },
     ]);
     return {
-      chartSize: {
-        height: 400,
-        pointRadius: 1,
-        width: 600,
-      },
       dateRange,
+      label: 'Demo',
       seriesData,
     };
   }

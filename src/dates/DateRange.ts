@@ -1,10 +1,10 @@
 import Date_ from './Date_';
 
 export default class DateRange {
-  dates: ReadonlyArray<Date_>;
-  labels: ReadonlyArray<LabelSpec>;
-  minTimestamp: number;
-  maxTimestamp: number;
+  readonly dates: ReadonlyArray<Date_>;
+  readonly labels: ReadonlyArray<LabelSpec>;
+  readonly minTimestamp: number;
+  readonly maxTimestamp: number;
 
   constructor(start_: Date_, end_: Date_) {
     const dates = [];
@@ -44,8 +44,8 @@ export default class DateRange {
   }
 }
 
-export type LabelSpec = {
+export type LabelSpec = Readonly<{
   label: string;
   // Number between 0 and 1 indicating how far through the range it is
   ratio: number;
-};
+}>;

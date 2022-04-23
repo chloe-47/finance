@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { Measurements, MeasurementSpec } from './ComponentsToMeasureStore';
-import ComponentsToMeasureStore from './ComponentsToMeasureStore';
+import subscribeToMeasurements from './subscribeToMeasurements';
+import unsubscribeFromMeasurements from './unsubscribeFromMeasurements';
 
 type Args<T> = {
   values: Array<T>;
@@ -13,27 +14,16 @@ export default function useMeasurements<T>({
   render,
   valToString,
 }: Args<T>): Measurements<T> | undefined {
+  const valuesKey = values.map(valToString).join(':');
   const [measurements, setMeasurements] = React.useState<
     Measurements<T> | undefined
   >();
 
   React.useEffect(() => {
-    const componentsToMeasure = ComponentsToMeasureStore.getValue();
-    if (!componentsToMeasure.has(values)) {
-      setMeasurements(undefined);
-      componentsToMeasure.set(
-        values,
-        createMeasurementSpec() as MeasurementSpec<T> as MeasurementSpec<unknown>,
-      );
-      ComponentsToMeasureStore.update(new Map(componentsToMeasure.entries()));
-    }
-    return () => {
-      const componentsToMeasure = ComponentsToMeasureStore.getValue();
-      if (componentsToMeasure.has(values)) {
-        componentsToMeasure.delete(values);
-        ComponentsToMeasureStore.update(new Map(componentsToMeasure.entries()));
-      }
-    };
+    const spec =
+      createMeasurementSpec() as MeasurementSpec<T> as MeasurementSpec<unknown>;
+    subscribeToMeasurements(valuesKey, spec);
+    return () => unsubscribeFromMeasurements(valuesKey, spec);
 
     function createMeasurementSpec(): MeasurementSpec<T> {
       return {
@@ -43,14 +33,18 @@ export default function useMeasurements<T>({
         values,
       };
     }
-  }, [values.map(valToString).join(':')]);
+  }, [valuesKey]);
 
   const timeout = React.useRef<number | undefined>();
-  function onMeasure(measurements: Measurements<T>): void {
-    clearTimeout(timeout.current);
-    timeout.current = setTimeout(() => {
-      setMeasurements(measurements);
-    }) as unknown as number;
+  function onMeasure(measurements: Measurements<T> | undefined): void {
+    if (measurements === undefined) {
+      setMeasurements(undefined);
+    } else {
+      clearTimeout(timeout.current);
+      timeout.current = setTimeout(() => {
+        setMeasurements(measurements);
+      }) as unknown as number;
+    }
   }
 
   return measurements;

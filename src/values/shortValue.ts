@@ -1,6 +1,6 @@
-type Options = {
+type Options = Readonly<{
   noDecimalPoints?: true;
-};
+}>;
 
 export default function shortValue(value: number, options?: Options): string {
   const decimalPoints = !options?.noDecimalPoints;
