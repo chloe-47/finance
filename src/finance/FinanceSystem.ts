@@ -1,10 +1,11 @@
 import DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
+import flatten from 'src/utils/flatten';
+import TimeSeriesTopLevelConfigBuilder from './builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { FinanceRule } from './FinanceRule';
 import FinanceState from './FinanceState';
 import type { FinanceStateProps } from './FinanceStateProps';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
-import TimeSeriesTopLevelConfigBuilder from './TimeSeriesTopLevelConfigBuilder';
 
 type Props = {
   initialState: FinanceStateProps;
@@ -27,13 +28,18 @@ export default class FinanceSystem {
     const { deadAt, currentAge } = this.props.timeSpan;
     const yearsAhead = deadAt - currentAge + 1;
     const dateRange = DateRange.nextYears(yearsAhead);
+    let state: FinanceState = new FinanceState(this.props.initialState);
+
     const builders = [
       builder('Cash', (state) => state.cash),
       builder('Expenses', (state) => state.monthlyExpenses),
       builder('Income', (state) => state.monthlyIncome),
+      ...flatten(
+        state.components.map((component) =>
+          component.createBuilders({ dateRange, state }),
+        ),
+      ),
     ];
-
-    let state: FinanceState = new FinanceState(this.props.initialState);
 
     dateRange.dates.forEach((date: Date_): void => {
       builders.forEach((builder) => builder.addPoint(date, state));

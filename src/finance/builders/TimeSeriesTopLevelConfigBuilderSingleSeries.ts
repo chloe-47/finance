@@ -1,8 +1,9 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
-import StaticSeriesModelBuilder from 'src/time_series/models/StaticSeriesModelBuilder';
-import type FinanceState from './FinanceState';
-import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
+import StaticSeriesModelBuilder from 'src/finance/builders/StaticSeriesModelBuilder';
+import type FinanceState from '../FinanceState';
+import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
+import type { TimeSeriesTopLevelConfigBuilder } from './TimeSeriesTopLevelConfigBuilder';
 
 type Props = Readonly<{
   dateRange: DateRange;
@@ -10,9 +11,11 @@ type Props = Readonly<{
   getValue: (state: FinanceState) => number;
 }>;
 
-export default class TimeSeriesTopLevelConfigBuilder {
+export default class TimeSeriesTopLevelConfigBuilderSingleSeries
+  implements TimeSeriesTopLevelConfigBuilder
+{
   readonly props: Props;
-  builder: StaticSeriesModelBuilder;
+  readonly builder: StaticSeriesModelBuilder;
 
   constructor(props: Props) {
     this.props = props;

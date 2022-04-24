@@ -48,7 +48,7 @@ export default function App() {
   );
 
   const configs = system.getTimeSeriesConfigs();
-  const height = (screenHeight ?? 800) / (configs.length * 2) - 50;
+  const height = (screenHeight ?? 800) / (configs.length * 1.5) - 50;
   const width = (screenWidth ?? 1200) * 0.7;
   const viewProps = React.useMemo(
     () => ({
