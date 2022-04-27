@@ -1,14 +1,12 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
 import StaticSeriesModelBuilder from 'src/finance/builders/StaticSeriesModelBuilder';
-import type FinanceState from '../FinanceState';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type { TimeSeriesTopLevelConfigBuilder } from './TimeSeriesTopLevelConfigBuilder';
 
 type Props = Readonly<{
   dateRange: DateRange;
   label: string;
-  getValue: (state: FinanceState) => number;
 }>;
 
 export default class TimeSeriesTopLevelConfigBuilderSingleSeries
@@ -26,8 +24,8 @@ export default class TimeSeriesTopLevelConfigBuilderSingleSeries
     Object.freeze(this);
   }
 
-  addPoint(date: Date_, state: FinanceState): void {
-    this.builder.addPoint({ date, value: this.props.getValue(state) });
+  addPoint(date: Date_, value: number): void {
+    this.builder.addPoint({ date, value });
   }
 
   getTopLevelConfig(): TimeSeriesTopLevelConfig {

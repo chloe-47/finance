@@ -12,6 +12,7 @@ export default function App() {
     () =>
       new FinanceSystem({
         initialState: {
+          baseMonthlyExpenses: 6e3,
           cash: 227e3,
           components: [
             {
@@ -24,7 +25,6 @@ export default function App() {
             },
           ],
           jobs: [],
-          monthlyExpenses: 6e3,
         },
         rules: [
           {

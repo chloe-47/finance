@@ -1,7 +1,7 @@
-import type { FinanceStateMortgageComponentProps } from './FinanceStateMortgageComponentProps';
+import type { FinanceStateMortgageComponentStaticConfig } from './FinanceStateMortgageComponentProps';
 
-export type FinanceStateComponentPropsType = Readonly<
-  FinanceStateMortgageComponentProps & {
+export type FinanceStateComponentStaticConfig = Readonly<
+  FinanceStateMortgageComponentStaticConfig & {
     type: 'Mortgage';
   }
 >;

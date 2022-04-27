@@ -1,4 +1,6 @@
-export type FinanceStateMortgageComponentProps = Readonly<{
+import type TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
+
+export type FinanceStateMortgageComponentStaticConfig = Readonly<{
   apr: string;
   balance: number;
   fixedMonthlyPayment: number;
@@ -6,3 +8,9 @@ export type FinanceStateMortgageComponentProps = Readonly<{
   insurancePerYear: number;
   taxPerSixMonths: number;
 }>;
+
+export type FinanceStateMortgageComponentProps = Readonly<
+  FinanceStateMortgageComponentStaticConfig & {
+    timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
+  }
+>;

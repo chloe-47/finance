@@ -1,14 +1,14 @@
 import DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
-import flatten from 'src/utils/flatten';
 import TimeSeriesTopLevelConfigBuilder from './builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
+import createComponentObject from './components/createComponentObject';
 import type { FinanceRule } from './FinanceRule';
 import FinanceState from './FinanceState';
-import type { FinanceStateProps } from './FinanceStateProps';
+import type { FinanceStateStaticConfig } from './FinanceStateProps';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 
 type Props = {
-  initialState: FinanceStateProps;
+  initialState: FinanceStateStaticConfig;
   rules: ReadonlyArray<FinanceRule>;
   timeSpan: {
     currentAge: number;
@@ -17,54 +17,58 @@ type Props = {
 };
 
 export default class FinanceSystem {
-  props: Props;
-  timeSeriesConfigs: ReadonlyArray<TimeSeriesTopLevelConfig> = [];
+  private props: Props;
+  private timeSeriesConfigs:
+    | ReadonlyArray<TimeSeriesTopLevelConfig>
+    | undefined;
 
-  constructor(props: Props) {
+  public constructor(props: Props) {
     this.props = props;
   }
 
-  resolve(): this {
-    const { deadAt, currentAge } = this.props.timeSpan;
+  public resolve(): this {
+    const { rules, timeSpan } = this.props;
+    const { deadAt, currentAge } = timeSpan;
     const yearsAhead = deadAt - currentAge + 1;
     const dateRange = DateRange.nextYears(yearsAhead);
-    let state: FinanceState = new FinanceState(this.props.initialState);
-
-    const builders = [
-      builder('Cash', (state) => state.cash),
-      builder('Expenses', (state) => state.monthlyExpenses),
-      builder('Income', (state) => state.monthlyIncome),
-      ...flatten(
-        state.components.map((component) =>
-          component.createBuilders({ dateRange, state }),
-        ),
+    let state: FinanceState = new FinanceState({
+      ...this.props.initialState,
+      components: this.props.initialState.components.map((component) =>
+        createComponentObject({ component, dateRange }),
       ),
-    ];
-
-    dateRange.dates.forEach((date: Date_): void => {
-      builders.forEach((builder) => builder.addPoint(date, state));
-      state = state.getNextState(this.props.rules);
+      coreBuilders: {
+        cash: builder('Cash'),
+        expenses: builder('Expenses'),
+        income: builder('Income'),
+      },
+      dateRange,
     });
 
-    this.timeSeriesConfigs = builders.map((builder) =>
-      builder.getTopLevelConfig(),
-    );
+    dateRange.dates.forEach((date: Date_): void => {
+      state = state.getNextStateAndWriteDataToChartBuildersForThisDate({
+        date,
+        rules,
+      });
+    });
+
+    this.timeSeriesConfigs = state.getTimeSeriesConfigs();
 
     return this;
 
-    function builder(
-      label: string,
-      getValue: (state: FinanceState) => number,
-    ): TimeSeriesTopLevelConfigBuilder {
+    function builder(label: string): TimeSeriesTopLevelConfigBuilder {
       return new TimeSeriesTopLevelConfigBuilder({
         dateRange,
-        getValue,
         label,
       });
     }
   }
 
   getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+    if (this.timeSeriesConfigs === undefined) {
+      throw new Error(
+        'Must call FinanceSystem.resolve() before FinanceSystem.getTimeSeriesConfigs()',
+      );
+    }
     return this.timeSeriesConfigs;
   }
 }

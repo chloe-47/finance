@@ -1,11 +1,8 @@
-import type { TimeSeriesTopLevelConfigBuilder } from '../builders/TimeSeriesTopLevelConfigBuilder';
-import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
-import type FinanceState from '../FinanceState';
+import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type {
-  CreateBuildersArgs,
   FinanceStateComponentObject,
+  ResolveArgs,
 } from './FinanceStateComponent';
-import type { FinanceStateComponentPropsType } from './FinanceStateComponentPropsType';
 import type { FinanceStateMortgageComponentProps } from './FinanceStateMortgageComponentProps';
 
 type DerivedValues = Readonly<{
@@ -31,13 +28,37 @@ const NO_PAYMENTS: DerivedValues['payments'] = {
 export default class FinanceStateMortgageComponent
   implements FinanceStateComponentObject
 {
-  readonly props: FinanceStateMortgageComponentProps;
+  private readonly props: FinanceStateMortgageComponentProps;
 
-  constructor(props: FinanceStateMortgageComponentProps) {
+  public constructor(props: FinanceStateMortgageComponentProps) {
     this.props = props;
   }
 
-  computeDerivedValues(cash: number): DerivedValues {
+  private derivedValuesInternal: DerivedValues | undefined;
+
+  public resolve({ date, cash }: ResolveArgs): void {
+    if (this.derivedValuesInternal) {
+      throw new Error(
+        'FinanceStateMortgageComponent.resolve should only be called once per instance',
+      );
+    }
+    this.derivedValuesInternal = this._computeDerivedValues(cash);
+    this.props.timeSeriesBuilder.addPoint(
+      date,
+      this.getValuesForBuilder(this.derivedValuesInternal),
+    );
+  }
+
+  public get derivedValues(): DerivedValues {
+    if (this.derivedValuesInternal === undefined) {
+      throw new Error(
+        'Cannot access FinanceStateMortgageComponent.derivedValues before calling .resolve()',
+      );
+    }
+    return this.derivedValuesInternal;
+  }
+
+  private _computeDerivedValues(cash: number): DerivedValues {
     const {
       apr,
       balance,
@@ -88,46 +109,18 @@ export default class FinanceStateMortgageComponent
     }
   }
 
-  getExpensesAmount(cash: number): number {
-    return this.computeDerivedValues(cash).expensesAmount;
+  public get expensesAmount(): number {
+    return this.derivedValues.expensesAmount;
   }
 
-  getNextState(cash: number): FinanceStateComponentObject {
-    return this.computeDerivedValues(cash).nextState;
+  public get nextState(): FinanceStateComponentObject {
+    return this.derivedValues.nextState;
   }
 
-  asProps(): FinanceStateComponentPropsType {
-    return {
-      ...this.props,
-      type: 'Mortgage',
-    };
-  }
-
-  createBuilders({
-    dateRange,
-    state,
-  }: CreateBuildersArgs): ReadonlyArray<TimeSeriesTopLevelConfigBuilder> {
-    return [
-      TimeSeriesTopLevelConfigBuilderMultiSeries.forComponent<FinanceStateMortgageComponent>(
-        {
-          component: this,
-          dateRange,
-          getValues: (
-            component: FinanceStateMortgageComponent,
-            state: FinanceState,
-          ): ReadonlyMap<string, number> => {
-            return component.getValuesForBuilder(state.cash);
-          },
-          label: 'Mortgage Payments',
-          seriesLabels: ['Interest', 'Principal', 'Insurance', 'Tax', 'Total'],
-          state,
-        },
-      ),
-    ];
-  }
-
-  getValuesForBuilder(cash: number): ReadonlyMap<string, number> {
-    const { payments } = this.computeDerivedValues(cash);
+  private getValuesForBuilder(
+    derivedValues: DerivedValues,
+  ): ReadonlyMap<string, number> {
+    const { payments } = derivedValues;
     return new Map([
       ['Interest', payments.interest],
       ['Principal', payments.principal],
@@ -135,5 +128,9 @@ export default class FinanceStateMortgageComponent
       ['Tax', payments.tax],
       ['Total', payments.total],
     ]);
+  }
+
+  public get timeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+    return [this.props.timeSeriesBuilder.getTopLevelConfig()];
   }
 }

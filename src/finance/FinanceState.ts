@@ -1,36 +1,25 @@
+import type Date_ from 'src/dates/Date_';
+import flatten from 'src/utils/flatten';
 import { applyAction } from './Action';
-import createComponentObject from './components/createComponentObject';
-import type { FinanceStateComponentObject } from './components/FinanceStateComponent';
 import type { FinanceRule } from './FinanceRule';
 import type { FinanceStateProps } from './FinanceStateProps';
 import subtractFederalIncomeTax from './subtractFederalIncomeTax';
+import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 import { shouldTriggerActivate } from './Trigger';
 
+type NextStateArgs = Readonly<{
+  rules: ReadonlyArray<FinanceRule>;
+  date: Date_;
+}>;
+
 export default class FinanceState {
-  readonly props: FinanceStateProps;
-  readonly components: ReadonlyArray<FinanceStateComponentObject>;
+  private readonly props: FinanceStateProps;
 
-  constructor(props: FinanceStateProps) {
+  public constructor(props: FinanceStateProps) {
     this.props = props;
-    this.components = props.components.map(createComponentObject);
   }
 
-  get cash(): number {
-    return this.props.cash;
-  }
-
-  get monthlyExpenses(): number {
-    let thisMonthsExpenses = this.props.monthlyExpenses;
-    let nextCash = this.props.cash - thisMonthsExpenses + this.monthlyIncome;
-    this.components.forEach((component): void => {
-      const expenseAmount = component.getExpensesAmount(nextCash);
-      nextCash -= expenseAmount;
-      thisMonthsExpenses += expenseAmount;
-    });
-    return thisMonthsExpenses;
-  }
-
-  get monthlyIncome(): number {
+  private get baseMonthlyIncome(): number {
     const preTaxIncome = this.props.jobs.reduce(
       (acc, { monthlyIncome }) => acc + monthlyIncome,
       0,
@@ -38,22 +27,34 @@ export default class FinanceState {
     return subtractFederalIncomeTax({ monthlyIncome: preTaxIncome });
   }
 
-  getNextState(rules: ReadonlyArray<FinanceRule>): FinanceState {
-    let thisMonthsExpenses = this.props.monthlyExpenses;
-    let nextCash = this.props.cash - thisMonthsExpenses + this.monthlyIncome;
-    const nextComponents = this.components.map((component) => {
-      const expenseAmount = component.getExpensesAmount(nextCash);
-      const updatedComponent = component.getNextState(nextCash);
-      nextCash -= expenseAmount;
+  public getNextStateAndWriteDataToChartBuildersForThisDate({
+    rules,
+    date,
+  }: NextStateArgs): FinanceState {
+    const { coreBuilders } = this.props;
+    coreBuilders.cash.addPoint(date, this.props.cash);
+
+    let thisMonthsExpenses = this.props.baseMonthlyExpenses;
+    const thisMonthsIncome = this.baseMonthlyIncome;
+
+    let cash = this.props.cash - thisMonthsExpenses + thisMonthsIncome;
+
+    const nextComponents = this.props.components.map((component) => {
+      component.resolve({ cash, date });
+      const expenseAmount = component.expensesAmount;
+      const updatedComponent = component.nextState;
+      cash -= expenseAmount;
       thisMonthsExpenses += expenseAmount;
-      return updatedComponent.asProps();
+      return updatedComponent;
     });
 
+    coreBuilders.expenses.addPoint(date, thisMonthsExpenses);
+    coreBuilders.income.addPoint(date, thisMonthsIncome);
+
     let nextProps: FinanceStateProps = {
-      cash: nextCash,
+      ...this.props,
+      cash,
       components: nextComponents,
-      jobs: this.props.jobs,
-      monthlyExpenses: this.props.monthlyExpenses,
     };
 
     rules.forEach(({ action, trigger }): void => {
@@ -63,5 +64,16 @@ export default class FinanceState {
     });
 
     return new FinanceState(nextProps);
+  }
+
+  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+    return [
+      ...Object.values(this.props.coreBuilders).map((builder) =>
+        builder.getTopLevelConfig(),
+      ),
+      ...flatten(
+        this.props.components.map((component) => component.timeSeriesConfigs),
+      ),
+    ];
   }
 }
