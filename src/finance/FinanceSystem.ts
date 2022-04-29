@@ -1,16 +1,19 @@
 import DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
+import type { StaticConfig as FinanceRuleStaticConfig } from './FinanceRule';
+import FinanceRule from './FinanceRule';
 import FinanceState from './FinanceState';
+import type { FinanceSubsystemStaticConfig } from './subsystems/FinanceStateSubsystemsTypes';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 
-type Props = {
+type Props = Readonly<{
   rules: ReadonlyArray<FinanceRuleStaticConfig>;
   subsystems: FinanceSubsystemStaticConfig;
-  timeSpan: {
+  timeSpan: Readonly<{
     currentAge: number;
     deadAt: number;
-  };
-};
+  }>;
+}>;
 
 export default class FinanceSystem {
   private props: Props;
@@ -23,13 +26,14 @@ export default class FinanceSystem {
   }
 
   public resolve(): this {
-    const { rules, timeSpan } = this.props;
+    const { rules: rules_, timeSpan } = this.props;
     const { deadAt, currentAge } = timeSpan;
     const yearsAhead = deadAt - currentAge + 1;
     const dateRange = DateRange.nextYears(yearsAhead);
-    let state: FinanceState = new FinanceState({
+    const rules = rules_.map((r) => FinanceRule.fromStaticConfig(r));
+    let state: FinanceState = FinanceState.fromStaticConfig({
       dateRange,
-      subsystems: createSubsystemsObject(this.props.subsystems),
+      staticConfig: { subsystems: this.props.subsystems },
     });
 
     dateRange.dates.forEach((date: Date_): void => {
@@ -44,7 +48,7 @@ export default class FinanceSystem {
     return this;
   }
 
-  getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     if (this.timeSeriesConfigs === undefined) {
       throw new Error(
         'Must call FinanceSystem.resolve() before FinanceSystem.getTimeSeriesConfigs()',

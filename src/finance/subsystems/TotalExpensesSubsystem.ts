@@ -4,9 +4,7 @@ import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
 import type { Subsystem } from './Subsystem';
 
-export type StaticConfig = Readonly<{
-  currentMonthlyValue: number;
-}>;
+export type StaticConfig = Readonly<Record<never, never>>;
 
 export type Props = Readonly<
   StaticConfig & {
@@ -14,22 +12,21 @@ export type Props = Readonly<
   }
 >;
 
-export default class UncategorizedExpensesSubsystem implements Subsystem {
+export default class TotalExpensesSubsystem implements Subsystem {
   private readonly props: Props;
+  private dynamicTotalExpenses: number;
 
   private constructor(props: Props) {
     this.props = props;
+    this.dynamicTotalExpenses = 0;
   }
 
   public static fromStaticConfig({
     dateRange,
-    uncategorizedExpenses: staticConfig,
   }: {
     dateRange: DateRange;
-    uncategorizedExpenses: StaticConfig;
-  }): UncategorizedExpensesSubsystem {
-    return new UncategorizedExpensesSubsystem({
-      ...staticConfig,
+  }): TotalExpensesSubsystem {
+    return new TotalExpensesSubsystem({
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
         label: 'Expenses',
@@ -38,24 +35,26 @@ export default class UncategorizedExpensesSubsystem implements Subsystem {
   }
 
   public doesReportExpenses(): boolean {
-    return true;
+    return false;
   }
 
   public doesReportIncome(): boolean {
     return false;
   }
 
-  public resolve(api: ResolveExecAPI): UncategorizedExpensesSubsystem {
-    const expenseValue = this.props.currentMonthlyValue;
-    const { amountWithdrawn } = api.withdrawCashForExpenseIfAvailable(
-      this,
-      expenseValue,
-    );
-    this.props.timeSeriesBuilder.addPoint(api.date, amountWithdrawn);
-    return this;
+  public resolve(api: ResolveExecAPI): TotalExpensesSubsystem {
+    api.resolveAllExpenses();
+    this.props.timeSeriesBuilder.addPoint(api.date, this.dynamicTotalExpenses);
+    return new TotalExpensesSubsystem({
+      ...this.props,
+    });
+  }
+
+  public dynamicReportExpense(amount: number): void {
+    this.dynamicTotalExpenses += amount;
   }
 
   public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    return [];
+    return [this.props.timeSeriesBuilder.getTopLevelConfig()];
   }
 }
