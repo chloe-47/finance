@@ -1,4 +1,4 @@
-type Args = (
+export type JobStaticConfig = (
   | {
       annualSalary: number;
     }
@@ -13,7 +13,7 @@ export default class Job {
   monthlyIncome: number;
   name: string;
 
-  constructor({ name, ...args }: Args) {
+  constructor({ name, ...args }: JobStaticConfig) {
     this.name = name;
     if ('monthlyIncome' in args) {
       this.monthlyIncome = args.monthlyIncome;

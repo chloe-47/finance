@@ -1,15 +1,11 @@
 import DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
-import TimeSeriesTopLevelConfigBuilder from './builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
-import createComponentObject from './components/createComponentObject';
-import type { FinanceRule } from './FinanceRule';
 import FinanceState from './FinanceState';
-import type { FinanceStateStaticConfig } from './FinanceStateProps';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 
 type Props = {
-  initialState: FinanceStateStaticConfig;
-  rules: ReadonlyArray<FinanceRule>;
+  rules: ReadonlyArray<FinanceRuleStaticConfig>;
+  subsystems: FinanceSubsystemStaticConfig;
   timeSpan: {
     currentAge: number;
     deadAt: number;
@@ -32,16 +28,8 @@ export default class FinanceSystem {
     const yearsAhead = deadAt - currentAge + 1;
     const dateRange = DateRange.nextYears(yearsAhead);
     let state: FinanceState = new FinanceState({
-      ...this.props.initialState,
-      components: this.props.initialState.components.map((component) =>
-        createComponentObject({ component, dateRange }),
-      ),
-      coreBuilders: {
-        cash: builder('Cash'),
-        expenses: builder('Expenses'),
-        income: builder('Income'),
-      },
       dateRange,
+      subsystems: createSubsystemsObject(this.props.subsystems),
     });
 
     dateRange.dates.forEach((date: Date_): void => {
@@ -54,13 +42,6 @@ export default class FinanceSystem {
     this.timeSeriesConfigs = state.getTimeSeriesConfigs();
 
     return this;
-
-    function builder(label: string): TimeSeriesTopLevelConfigBuilder {
-      return new TimeSeriesTopLevelConfigBuilder({
-        dateRange,
-        label,
-      });
-    }
   }
 
   getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
