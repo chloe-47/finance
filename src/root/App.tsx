@@ -1,6 +1,5 @@
 import * as React from 'react';
 import FinanceSystem from 'src/finance/FinanceSystem';
-import Job from 'src/finance/Job';
 import MeasurementsProvider from 'src/measurements/MeasurementsProvider';
 import useMeasureElement from 'src/measurements/useMeasureElement';
 import 'src/root/styles.css';
@@ -11,26 +10,11 @@ export default function App() {
   const system = React.useMemo(
     () =>
       new FinanceSystem({
-        initialState: {
-          baseMonthlyExpenses: 6e3,
-          cash: 227e3,
-          components: [
-            {
-              apr: '3.625%',
-              balance: 816657.88,
-              fixedMonthlyPayment: 4308.77,
-              insurancePerYear: 2773.0,
-              taxPerSixMonths: 5190.1,
-              type: 'Mortgage',
-            },
-          ],
-          jobs: [],
-        },
         rules: [
           {
             action: [
               'Start job',
-              new Job({ annualSalary: 200e3, name: 'Arbitrary tech job' }),
+              { annualSalary: 200e3, name: 'Arbitrary tech job' },
             ],
             trigger: [['Cash <=', 100e3], 'and', 'unemployed'],
           },
@@ -39,6 +23,24 @@ export default function App() {
             trigger: ['Cash >=', 1e6],
           },
         ],
+        subsystems: {
+          cash: {
+            currentValue: 227e3,
+          },
+          jobs: {
+            currentJobs: [],
+          },
+          mortgage: {
+            apr: '3.625%',
+            currentBalance: 816657.88,
+            fixedMonthlyPayment: 4308.77,
+            insurancePerYear: 2773.0,
+            taxPerSixMonths: 5190.1,
+          },
+          uncategorizedExpenses: {
+            currentMonthlyValue: 6e3,
+          },
+        },
         timeSpan: {
           currentAge: 27,
           deadAt: 85,

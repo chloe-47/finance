@@ -1,23 +1,12 @@
 import type DateRange from 'src/dates/DateRange';
-import type TimeSeriesTopLevelConfigBuilderSingleSeries from './builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
-import type { FinanceStateComponentObject } from './components/FinanceStateComponent';
-import type { FinanceStateComponentStaticConfig } from './components/FinanceStateComponentPropsType';
-import type Job from './Job';
+import type FinanceStateSubsystems from './subsystems/FinanceStateSubsystems';
+import type { FinanceSubsystemStaticConfig } from './subsystems/FinanceStateSubsystemsTypes';
 
 export type FinanceStateStaticConfig = Readonly<{
-  cash: number;
-  components: ReadonlyArray<FinanceStateComponentStaticConfig>;
-  jobs: ReadonlyArray<Job>;
-  baseMonthlyExpenses: number;
+  subsystems: FinanceSubsystemStaticConfig;
 }>;
 
-export type FinanceStateProps = Omit<FinanceStateStaticConfig, 'components'> &
-  Readonly<{
-    components: ReadonlyArray<FinanceStateComponentObject>;
-    coreBuilders: Readonly<{
-      cash: TimeSeriesTopLevelConfigBuilderSingleSeries;
-      expenses: TimeSeriesTopLevelConfigBuilderSingleSeries;
-      income: TimeSeriesTopLevelConfigBuilderSingleSeries;
-    }>;
-    dateRange: DateRange;
-  }>;
+export type FinanceStateProps = Readonly<{
+  dateRange: DateRange;
+  subsystems: FinanceStateSubsystems;
+}>;
