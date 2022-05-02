@@ -74,6 +74,7 @@ export default class SubsystemResolver {
       cash: this.getAssertResolved(this.props.subsystems.cash),
       jobs: this.getAssertResolved(this.props.subsystems.jobs),
       mortgage: this.getAssertResolved(this.props.subsystems.mortgage),
+      targetCash: this.getAssertResolved(this.props.subsystems.targetCash),
       totalExpenses: this.getAssertResolved(
         this.props.subsystems.totalExpenses,
       ),

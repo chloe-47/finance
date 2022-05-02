@@ -38,7 +38,6 @@ export default class MortgageSubsystem implements Subsystem {
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
         dateRange,
         label: 'Mortgage Payments',
-        seriesLabels: ['Interest', 'Principal', 'Insurance', 'Tax', 'Total'],
       }),
     });
   }
@@ -58,10 +57,11 @@ export default class MortgageSubsystem implements Subsystem {
       );
     }
     this.derivedValuesInternal = this.computeDerivedValues(api);
-    this.props.timeSeriesBuilder.addPoint(
-      api.date,
-      this.getValuesForBuilder(this.derivedValuesInternal),
-    );
+    this.props.timeSeriesBuilder.addPoint({
+      date: api.date,
+      style: { color: 'pink', thickness: 'thick' },
+      values: this.getValuesForBuilder(this.derivedValuesInternal),
+    });
     return this.derivedValuesInternal.nextState;
   }
 

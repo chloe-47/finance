@@ -33,6 +33,7 @@ export default class UncategorizedExpensesSubsystem implements Subsystem {
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
         label: 'Expenses',
+        style: { color: 'pink', thickness: 'thick' },
       }),
     });
   }

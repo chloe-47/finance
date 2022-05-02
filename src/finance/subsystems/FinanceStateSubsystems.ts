@@ -14,6 +14,7 @@ import SubsystemsExecState from './helpers/SubsystemsExecState';
 import JobsSubsystem from './JobsSubsystem';
 import MortgageSubsystem from './MortgageSubsystem';
 import type { Subsystem } from './Subsystem';
+import TargetCash from './TargetCash';
 import TotalExpensesSubsystem from './TotalExpensesSubsystem';
 import TotalIncomeSubsystem from './TotalIncomeSubsystem';
 import UncategorizedExpensesSubsystem from './UncategorizedExpensesSubsystem';
@@ -26,16 +27,24 @@ export default class FinanceStateSubsystems {
   }
 
   public static fromStaticConfig({
-    staticConfig: { cash, jobs, mortgage, uncategorizedExpenses },
+    staticConfig: { cash, jobs, mortgage, targetCash, uncategorizedExpenses },
     dateRange,
   }: {
     readonly staticConfig: FinanceSubsystemStaticConfig;
     readonly dateRange: DateRange;
   }): FinanceStateSubsystems {
+    const cashSubsystem = CashSubsystem.fromStaticConfig({
+      cash,
+      dateRange,
+    });
     return new FinanceStateSubsystems({
-      cash: CashSubsystem.fromStaticConfig({ cash, dateRange }),
+      cash: cashSubsystem,
       jobs: JobsSubsystem.fromStaticConfig(jobs),
       mortgage: MortgageSubsystem.fromStaticConfig({ dateRange, mortgage }),
+      targetCash: TargetCash.fromStaticConfig({
+        cashBuilder: cashSubsystem.builder,
+        targetCash,
+      }),
       totalExpenses: TotalExpensesSubsystem.fromStaticConfig({ dateRange }),
       totalIncome: TotalIncomeSubsystem.fromStaticConfig({ dateRange }),
       uncategorizedExpenses: UncategorizedExpensesSubsystem.fromStaticConfig({

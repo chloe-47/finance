@@ -30,6 +30,7 @@ export default class TotalIncomeSubsystem implements Subsystem {
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
         label: 'Income',
+        style: { color: 'pink', thickness: 'thick' },
       }),
     });
   }

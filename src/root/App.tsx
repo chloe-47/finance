@@ -37,6 +37,10 @@ export default function App() {
             insurancePerYear: 2773.0,
             taxPerSixMonths: 5190.1,
           },
+          targetCash: {
+            max: [6, 'years of expenses'],
+            min: [5, 'years of expenses'],
+          },
           uncategorizedExpenses: {
             currentMonthlyValue: 6e3,
           },

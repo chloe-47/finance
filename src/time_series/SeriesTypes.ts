@@ -7,10 +7,16 @@ export type Point = Readonly<{
   value: number;
 }>;
 
-export type Series = Readonly<{
+export type SeriesStyle = Readonly<{
+  color: 'pink' | 'gray';
+  thickness: 'thin' | 'thick';
+}>;
+
+export type Series = {
   label: string;
   points: Array<Point>;
-}>;
+  style: SeriesStyle;
+};
 
 export type ChartSize = Readonly<{
   width: number;

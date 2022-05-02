@@ -1,13 +1,8 @@
-import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
+import type { Props } from 'src/finance/builders/StaticSeriesModelBuilder';
 import StaticSeriesModelBuilder from 'src/finance/builders/StaticSeriesModelBuilder';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type { TimeSeriesTopLevelConfigBuilder } from './TimeSeriesTopLevelConfigBuilder';
-
-type Props = Readonly<{
-  dateRange: DateRange;
-  label: string;
-}>;
 
 export default class TimeSeriesTopLevelConfigBuilderSingleSeries
   implements TimeSeriesTopLevelConfigBuilder
@@ -17,10 +12,7 @@ export default class TimeSeriesTopLevelConfigBuilderSingleSeries
 
   constructor(props: Props) {
     this.props = props;
-    this.builder = new StaticSeriesModelBuilder({
-      dateRange: props.dateRange,
-      label: props.label,
-    });
+    this.builder = new StaticSeriesModelBuilder(props);
     Object.freeze(this);
   }
 
