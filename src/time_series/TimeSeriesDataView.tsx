@@ -5,6 +5,7 @@ import createCoordinateMapper from 'src/time_series/createCoordinateMapper';
 import {
   getCompleteChartSize,
   Series,
+  SeriesStyle,
   TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
 } from 'src/time_series/SeriesTypes';
 import type { ValueRange } from './getValueRange';
@@ -75,6 +76,7 @@ export default function TimeSeriesDataView({
           const path = createPath(
             series.points.map(getCoordinates),
             pointRadius,
+            series.style,
           );
           return <svg key={series.label}>{path}</svg>;
         })}
@@ -86,6 +88,7 @@ export default function TimeSeriesDataView({
 function createPath(
   allCoordinates: Array<Coordinates>,
   pointRadius: number,
+  { color, thickness }: SeriesStyle,
 ): JSX.Element {
   const d = allCoordinates
     .map(({ cx, cy }: Coordinates, index: number): string => {
@@ -100,10 +103,10 @@ function createPath(
     <path
       d={d}
       fill="none"
-      stroke="#a7a"
+      stroke={color === 'pink' ? '#a7a' : '#888'}
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth={pointRadius * 1.5}
+      strokeWidth={thickness === 'thick' ? 1.5 : 0.5}
     />
   );
 }

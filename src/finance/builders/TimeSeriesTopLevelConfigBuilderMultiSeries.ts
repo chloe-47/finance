@@ -1,5 +1,6 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
+import type { SeriesStyle } from 'src/time_series/SeriesTypes';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import StaticSeriesModelBuilderMultiSeries from './StaticSeriesModelBuilderMultiSeries';
 import type { TimeSeriesTopLevelConfigBuilder } from './TimeSeriesTopLevelConfigBuilder';
@@ -7,7 +8,6 @@ import type { TimeSeriesTopLevelConfigBuilder } from './TimeSeriesTopLevelConfig
 type Props = Readonly<{
   dateRange: DateRange;
   label: string;
-  seriesLabels: ReadonlyArray<string>;
 }>;
 
 export default class TimeSeriesTopLevelConfigBuilderMultiSeries
@@ -21,15 +21,36 @@ export default class TimeSeriesTopLevelConfigBuilderMultiSeries
     this.builder = new StaticSeriesModelBuilderMultiSeries({
       dateRange: props.dateRange,
       label: props.label,
-      seriesLabels: props.seriesLabels,
     });
     Object.freeze(this);
   }
 
-  addPoint(date: Date_, values: ReadonlyMap<string, number>): void {
+  addPoint({
+    date,
+    values,
+    style,
+  }: Readonly<{
+    date: Date_;
+    values: ReadonlyMap<string, number>;
+    style: SeriesStyle;
+  }>): void {
     Array.from(values.entries()).forEach(([label, value]) => {
-      this.builder.addPoint(label, { date, value });
+      this.builder.addPoint({ label, point: { date, value }, style });
     });
+  }
+
+  addPointSingleSeries({
+    date,
+    series,
+    style,
+    value,
+  }: Readonly<{
+    date: Date_;
+    series: string;
+    value: number;
+    style: SeriesStyle;
+  }>): void {
+    this.builder.addPoint({ label: series, point: { date, value }, style });
   }
 
   getTopLevelConfig(): TimeSeriesTopLevelConfig {

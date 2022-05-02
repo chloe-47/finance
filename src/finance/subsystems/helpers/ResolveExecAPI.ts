@@ -64,4 +64,9 @@ export default class ResolveExecAPI {
       .filter((s) => s.doesReportExpenses())
       .map((s) => this.props.resolver.resolve(s));
   }
+
+  public getTotalExpenses(): number {
+    this.props.resolver.resolve(this.props.subsystems.totalExpenses);
+    return this.props.subsystems.totalExpenses.resolvedValue;
+  }
 }

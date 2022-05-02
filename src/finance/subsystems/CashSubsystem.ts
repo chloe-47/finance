@@ -1,5 +1,5 @@
 import type DateRange from 'src/dates/DateRange';
-import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
+import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
 import type { WithdrawResult } from './helpers/ResolveExecAPI';
@@ -11,7 +11,7 @@ export type StaticConfig = Readonly<{
 
 export type CashSubsystemProps = Readonly<
   StaticConfig & {
-    timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderSingleSeries;
+    timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
   }
 >;
 
@@ -27,13 +27,14 @@ export default class CashSubsystem implements Subsystem {
   public static fromStaticConfig({
     cash: staticConfig,
     dateRange,
-  }: {
+  }: Readonly<{
     cash: StaticConfig;
     dateRange: DateRange;
-  }): CashSubsystem {
+    extraSeries?: ReadonlyArray<string>;
+  }>): CashSubsystem {
     return new CashSubsystem({
       ...staticConfig,
-      timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
+      timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
         dateRange,
         label: 'Cash',
       }),
@@ -48,8 +49,17 @@ export default class CashSubsystem implements Subsystem {
     return false;
   }
 
+  public get builder(): TimeSeriesTopLevelConfigBuilderMultiSeries {
+    return this.props.timeSeriesBuilder;
+  }
+
   public resolve(api: ResolveExecAPI): CashSubsystem {
-    this.props.timeSeriesBuilder.addPoint(api.date, this.props.currentValue);
+    this.props.timeSeriesBuilder.addPointSingleSeries({
+      date: api.date,
+      series: 'cash',
+      style: { color: 'pink', thickness: 'thick' },
+      value: this.props.currentValue,
+    });
     api.resolveAllIncome();
     api.resolveAllExpenses();
     return new CashSubsystem({

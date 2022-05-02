@@ -30,6 +30,7 @@ export default class TotalExpensesSubsystem implements Subsystem {
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
         label: 'Expenses',
+        style: { color: 'pink', thickness: 'thick' },
       }),
     });
   }
@@ -56,5 +57,9 @@ export default class TotalExpensesSubsystem implements Subsystem {
 
   public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [this.props.timeSeriesBuilder.getTopLevelConfig()];
+  }
+
+  public get resolvedValue(): number {
+    return this.dynamicTotalExpenses;
   }
 }
