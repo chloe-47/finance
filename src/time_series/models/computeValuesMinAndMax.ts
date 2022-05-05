@@ -16,8 +16,5 @@ export default function computeValuesMinAndMax(
       }
     });
   });
-  if (min !== 0) {
-    throw new Error('computeValuesMinAndMax does not support negative values');
-  }
   return { max, min };
 }

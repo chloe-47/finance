@@ -11,6 +11,7 @@ import type {
   Subsystems,
 } from './FinanceStateSubsystemsTypes';
 import SubsystemsExecState from './helpers/SubsystemsExecState';
+import IndexFundTransfers from './IndexFundTransfers';
 import JobsSubsystem from './JobsSubsystem';
 import MortgageSubsystem from './MortgageSubsystem';
 import type { Subsystem } from './Subsystem';
@@ -39,6 +40,7 @@ export default class FinanceStateSubsystems {
     });
     return new FinanceStateSubsystems({
       cash: cashSubsystem,
+      indexFundTransfers: IndexFundTransfers.fromStaticConfig({ dateRange }),
       jobs: JobsSubsystem.fromStaticConfig(jobs),
       mortgage: MortgageSubsystem.fromStaticConfig({ dateRange, mortgage }),
       targetCash: TargetCash.fromStaticConfig({

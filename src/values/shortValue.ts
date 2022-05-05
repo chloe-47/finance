@@ -4,12 +4,17 @@ type Options = Readonly<{
 
 export default function shortValue(value: number, options?: Options): string {
   const decimalPoints = !options?.noDecimalPoints;
+  let sign = '';
+  if (value < 0) {
+    value *= -1;
+    sign = '-';
+  }
   if (value === 0) {
     return '$0';
   } else if (value < 1e2) {
-    return `$${value.toFixed(decimalPoints ? 2 : 0)}`;
+    return `$${sign}${value.toFixed(decimalPoints ? 2 : 0)}`;
   } else if (value < 1e3) {
-    return `$${value.toFixed(0)}`;
+    return `$${sign}${value.toFixed(0)}`;
   } else if (value < 1e6) {
     return withMultiplierSuffix(1e3, 'K');
   } else if (value < 1e9) {
@@ -31,6 +36,6 @@ export default function shortValue(value: number, options?: Options): string {
       : quotient < 100
       ? 1
       : 0;
-    return `$${quotient.toFixed(points)}${suffix}`;
+    return `$${sign}${quotient.toFixed(points)}${suffix}`;
   }
 }

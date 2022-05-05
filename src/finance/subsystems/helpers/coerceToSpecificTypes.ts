@@ -1,5 +1,6 @@
 import CashSubsystem from '../CashSubsystem';
 import type { Subsystems } from '../FinanceStateSubsystemsTypes';
+import IndexFundTransfers from '../IndexFundTransfers';
 import JobsSubsystem from '../JobsSubsystem';
 import MortgageSubsystem from '../MortgageSubsystem';
 import type { Subsystem } from '../Subsystem';
@@ -10,6 +11,7 @@ import UncategorizedExpensesSubsystem from '../UncategorizedExpensesSubsystem';
 
 type GenericTypes = Readonly<{
   cash: Subsystem;
+  indexFundTransfers: Subsystem;
   jobs: Subsystem;
   mortgage: Subsystem;
   targetCash: Subsystem;
@@ -20,6 +22,7 @@ type GenericTypes = Readonly<{
 
 export default function coerceToSpecificTypes({
   cash,
+  indexFundTransfers,
   jobs,
   mortgage,
   targetCash,
@@ -32,6 +35,15 @@ export default function coerceToSpecificTypes({
       const nextState = cash;
       if (!(nextState instanceof CashSubsystem)) {
         throw new Error('CashSubsystem.resolve() must return CashSubsystem');
+      }
+      return nextState;
+    })(),
+    indexFundTransfers: (() => {
+      const nextState = indexFundTransfers;
+      if (!(nextState instanceof IndexFundTransfers)) {
+        throw new Error(
+          'IndexFundTransfers.resolve() must return IndexFundTransfers',
+        );
       }
       return nextState;
     })(),

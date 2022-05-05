@@ -4,30 +4,26 @@ export default function getLabelValues(
   { minValue, maxValue }: Omit<ValueRange, 'labelValues'>,
   step: number,
 ): Array<number> {
-  if (minValue !== 0) {
-    throw new Error('getAllValueLabels does not support negative values');
-  }
-  if (maxValue < 1) {
-    throw new Error('getAllValueLabels does not support maxValue < 1');
+  const absoluteMax = Math.max(Math.abs(minValue), Math.abs(maxValue));
+  if (absoluteMax < 1) {
+    throw new Error('getLabelValues does not support absoluteMax < 1');
   }
   let floorOrderOfMagnitude = 1;
-  while (floorOrderOfMagnitude * 10 < maxValue) {
+  while (floorOrderOfMagnitude * 10 < absoluteMax) {
     floorOrderOfMagnitude *= 10;
   }
   let normalizedMaxValue = maxValue / floorOrderOfMagnitude;
-  if (!(1 <= normalizedMaxValue && normalizedMaxValue <= 10)) {
-    throw new Error(
-      `Normalization failed -- maxValue=${maxValue}, floorOrderOfMagnitude=${floorOrderOfMagnitude}, normalizedMaxValue=${normalizedMaxValue}`,
-    );
-  }
-  if (normalizedMaxValue < 3) {
+  let normalizedMinValue = minValue / floorOrderOfMagnitude;
+
+  if (normalizedMaxValue < 3 && normalizedMinValue < 3) {
     normalizedMaxValue *= 10;
+    normalizedMinValue *= 10;
     floorOrderOfMagnitude /= 10;
   }
 
   const labelValues: Array<number> = [];
   for (
-    let val = 0;
+    let val = normalizedMinValue === 0 ? 0 : normalizedMinValue - 1;
     val <= normalizedMaxValue + 1 || (labelValues.length - 1) % step !== 0;
     val++
   ) {

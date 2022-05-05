@@ -10,6 +10,7 @@ export type Coordinates = Readonly<{
 
 type Mapper = Readonly<{
   getCoordinates: (point: Point) => Coordinates;
+  zeroYCoord: number | undefined;
 }>;
 
 type Args = Readonly<{
@@ -47,10 +48,16 @@ export default function createCoordinateMapper({
   function getCoordinates({ date, value }: Point): Coordinates {
     return {
       cx: xMin + (date.timestamp() - minDateValue) * dateMultiplier,
-      cy: height - yMin - (value - minValue) * valueMultiplier,
+      cy: getYCoordinate(value),
       r: pointRadius,
     };
   }
 
-  return { getCoordinates };
+  function getYCoordinate(value: number): number {
+    return height - yMin - (value - minValue) * valueMultiplier;
+  }
+
+  const zeroYCoord = minValue >= 0 ? undefined : getYCoordinate(0);
+
+  return { getCoordinates, zeroYCoord };
 }

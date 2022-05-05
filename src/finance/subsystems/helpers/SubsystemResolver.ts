@@ -72,6 +72,9 @@ export default class SubsystemResolver {
   public getNextSubsystems(): Subsystems {
     return coerceToSpecificTypes({
       cash: this.getAssertResolved(this.props.subsystems.cash),
+      indexFundTransfers: this.getAssertResolved(
+        this.props.subsystems.indexFundTransfers,
+      ),
       jobs: this.getAssertResolved(this.props.subsystems.jobs),
       mortgage: this.getAssertResolved(this.props.subsystems.mortgage),
       targetCash: this.getAssertResolved(this.props.subsystems.targetCash),

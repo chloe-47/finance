@@ -1,6 +1,7 @@
 import type Date_ from 'src/dates/Date_';
 import type { Subsystems } from '../FinanceStateSubsystemsTypes';
 import type { Subsystem } from '../Subsystem';
+import type { ResolvedTargetCash } from '../TargetCash';
 import type SubsystemResolver from './SubsystemResolver';
 
 export type WithdrawResult = Readonly<{
@@ -68,5 +69,14 @@ export default class ResolveExecAPI {
   public getTotalExpenses(): number {
     this.props.resolver.resolve(this.props.subsystems.totalExpenses);
     return this.props.subsystems.totalExpenses.resolvedValue;
+  }
+
+  public getInitialCash(): number {
+    return this.props.subsystems.cash.currentValue;
+  }
+
+  public getTargetCash(): ResolvedTargetCash {
+    this.props.resolver.resolve(this.props.subsystems.targetCash);
+    return this.props.subsystems.targetCash.getResolvedValue();
   }
 }

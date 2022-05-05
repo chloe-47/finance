@@ -45,7 +45,7 @@ export default function TimeSeriesDataView({
 
   const { dataViewMinCoordinate: xMin, dataViewMaxCoordinate: xMax } = xOffset;
   const { dataViewMinCoordinate: yMin, dataViewMaxCoordinate: yMax } = yOffset;
-  const { getCoordinates } = createCoordinateMapper({
+  const { getCoordinates, zeroYCoord } = createCoordinateMapper({
     chartSize,
     dateRange,
     valueRange,
@@ -72,6 +72,16 @@ export default function TimeSeriesDataView({
           strokeLinejoin="round"
           strokeWidth={1}
         />
+        {zeroYCoord === undefined ? null : (
+          <path
+            d={`M ${xMin},${zeroYCoord} L ${xMax},${zeroYCoord}`}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.2)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1}
+          />
+        )}
         {seriesData.seriesList.map((series: Series): JSX.Element => {
           const path = createPath(
             series.points.map(getCoordinates),

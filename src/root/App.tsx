@@ -38,8 +38,8 @@ export default function App() {
             taxPerSixMonths: 5190.1,
           },
           targetCash: {
-            max: [6, 'years of expenses'],
-            min: [5, 'years of expenses'],
+            max: [2.5, 'years of expenses'],
+            min: [2, 'years of expenses'],
           },
           uncategorizedExpenses: {
             currentMonthlyValue: 6e3,
@@ -54,7 +54,7 @@ export default function App() {
   );
 
   const configs = system.getTimeSeriesConfigs();
-  const height = (screenHeight ?? 800) / (configs.length * 1.5) - 50;
+  const height = (screenHeight ?? 800) / (configs.length * 1.2) - 20;
   const width = (screenWidth ?? 1200) * 0.7;
   const viewProps = React.useMemo(
     () => ({
