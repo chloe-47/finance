@@ -13,6 +13,11 @@ export type ResolvedConfig = {
   maxMonthsOfExpenses: number;
 };
 
+export type ResolvedTargetCash = {
+  min: number;
+  max: number;
+};
+
 export type Props = Readonly<
   ResolvedConfig & {
     timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
@@ -26,6 +31,7 @@ export type CreationArgs = Readonly<{
 
 export default class TargetCash implements Subsystem {
   private readonly props: Props;
+  private resolvedValue: ResolvedTargetCash | undefined;
 
   private constructor(props: Props) {
     this.props = props;
@@ -60,6 +66,7 @@ export default class TargetCash implements Subsystem {
     const minCash = totalExpenses * this.props.minMonthsOfExpenses;
     const maxCash = totalExpenses * this.props.maxMonthsOfExpenses;
     const values = { max: maxCash, min: minCash };
+    this.resolvedValue = values;
     const keys: Array<'min' | 'max'> = ['min', 'max'];
     keys.forEach((key) => {
       this.props.timeSeriesBuilder.addPointSingleSeries({
@@ -76,5 +83,15 @@ export default class TargetCash implements Subsystem {
 
   public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [];
+  }
+
+  public getResolvedValue(): ResolvedTargetCash {
+    const { resolvedValue } = this;
+    if (resolvedValue === undefined) {
+      throw new Error(
+        'Must call TargetCash.resolve() before TargetCash.getResolvedValue()',
+      );
+    }
+    return resolvedValue;
   }
 }

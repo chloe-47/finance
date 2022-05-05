@@ -1,5 +1,6 @@
 import type CashSubsystem from './CashSubsystem';
 import type { StaticConfig as CashSubsystemStaticConfig } from './CashSubsystem';
+import type IndexFundTransfers from './IndexFundTransfers';
 import type JobsSubsystem from './JobsSubsystem';
 import type { StaticConfig as JobsSubsystemStaticConfig } from './JobsSubsystem';
 import type MortgageSubsystem from './MortgageSubsystem';
@@ -21,6 +22,7 @@ export type FinanceSubsystemStaticConfig = Readonly<{
 
 export type Subsystems = Readonly<{
   cash: CashSubsystem;
+  indexFundTransfers: IndexFundTransfers;
   jobs: JobsSubsystem;
   mortgage: MortgageSubsystem;
   targetCash: TargetCash;
