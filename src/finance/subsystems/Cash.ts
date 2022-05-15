@@ -3,23 +3,25 @@ import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTo
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
 import type { WithdrawResult } from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<{
   currentValue: number;
 }>;
 
-export type CashSubsystemProps = Readonly<
+export type CashProps = Readonly<
   StaticConfig & {
     timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
   }
 >;
 
-export default class CashSubsystem implements Subsystem {
-  private readonly props: CashSubsystemProps;
+export default class Cash extends SubsystemBase implements Subsystem {
+  private readonly props: CashProps;
   private dynamicValue: number;
 
-  private constructor(props: CashSubsystemProps) {
+  private constructor(props: CashProps) {
+    super();
     this.props = props;
     this.dynamicValue = props.currentValue;
   }
@@ -31,8 +33,8 @@ export default class CashSubsystem implements Subsystem {
     cash: StaticConfig;
     dateRange: DateRange;
     extraSeries?: ReadonlyArray<string>;
-  }>): CashSubsystem {
-    return new CashSubsystem({
+  }>): Cash {
+    return new Cash({
       ...staticConfig,
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
         dateRange,
@@ -41,19 +43,11 @@ export default class CashSubsystem implements Subsystem {
     });
   }
 
-  public doesReportExpenses(): boolean {
-    return false;
-  }
-
-  public doesReportIncome(): boolean {
-    return false;
-  }
-
   public get builder(): TimeSeriesTopLevelConfigBuilderMultiSeries {
     return this.props.timeSeriesBuilder;
   }
 
-  public resolve(api: ResolveExecAPI): CashSubsystem {
+  public resolve(api: ResolveExecAPI): Cash {
     this.props.timeSeriesBuilder.addPointSingleSeries({
       date: api.date,
       series: 'cash',
@@ -62,7 +56,8 @@ export default class CashSubsystem implements Subsystem {
     });
     api.resolveAllIncome();
     api.resolveAllExpenses();
-    return new CashSubsystem({
+    api.resolveAllTransfers();
+    return new Cash({
       ...this.props,
       currentValue: this.dynamicValue,
     });
@@ -80,7 +75,18 @@ export default class CashSubsystem implements Subsystem {
     return { amountWithdrawn: amount, successfullyWithdrawn: true };
   }
 
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+  dynamicWithdrawOrDepositCashForTransfer(
+    withdrawAmount: number,
+  ): WithdrawResult {
+    const actualWithdrawAmount = Math.min(this.dynamicValue, withdrawAmount);
+    this.dynamicValue -= actualWithdrawAmount;
+    return {
+      amountWithdrawn: actualWithdrawAmount,
+      successfullyWithdrawn: true,
+    };
+  }
+
+  public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [this.props.timeSeriesBuilder.getTopLevelConfig()];
   }
 

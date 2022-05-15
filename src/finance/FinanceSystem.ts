@@ -3,7 +3,7 @@ import type Date_ from 'src/dates/Date_';
 import type { StaticConfig as FinanceRuleStaticConfig } from './FinanceRule';
 import FinanceRule from './FinanceRule';
 import FinanceState from './FinanceState';
-import type { FinanceSubsystemStaticConfig } from './subsystems/FinanceStateSubsystemsTypes';
+import type { FinanceSubsystemStaticConfig } from './subsystems/shared/FinanceStateSubsystemsTypes';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 
 type Props = Readonly<{

@@ -2,7 +2,8 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<Record<never, never>>;
 
@@ -12,11 +13,12 @@ export type Props = Readonly<
   }
 >;
 
-export default class TotalExpensesSubsystem implements Subsystem {
+export default class TotalExpenses extends SubsystemBase implements Subsystem {
   private readonly props: Props;
   private dynamicTotalExpenses: number;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
     this.dynamicTotalExpenses = 0;
   }
@@ -25,8 +27,8 @@ export default class TotalExpensesSubsystem implements Subsystem {
     dateRange,
   }: {
     dateRange: DateRange;
-  }): TotalExpensesSubsystem {
-    return new TotalExpensesSubsystem({
+  }): TotalExpenses {
+    return new TotalExpenses({
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
         label: 'Expenses',
@@ -35,18 +37,10 @@ export default class TotalExpensesSubsystem implements Subsystem {
     });
   }
 
-  public doesReportExpenses(): boolean {
-    return false;
-  }
-
-  public doesReportIncome(): boolean {
-    return false;
-  }
-
-  public resolve(api: ResolveExecAPI): TotalExpensesSubsystem {
+  public resolve(api: ResolveExecAPI): TotalExpenses {
     api.resolveAllExpenses();
     this.props.timeSeriesBuilder.addPoint(api.date, this.dynamicTotalExpenses);
-    return new TotalExpensesSubsystem({
+    return new TotalExpenses({
       ...this.props,
     });
   }
@@ -55,7 +49,7 @@ export default class TotalExpensesSubsystem implements Subsystem {
     this.dynamicTotalExpenses += amount;
   }
 
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+  public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [this.props.timeSeriesBuilder.getTopLevelConfig()];
   }
 

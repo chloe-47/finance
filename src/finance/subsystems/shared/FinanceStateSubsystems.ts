@@ -1,24 +1,25 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
 import flatten from 'src/utils/flatten';
-import type FinanceRule from '../FinanceRule';
-import subtractFederalIncomeTax from '../subtractFederalIncomeTax';
-import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
-import { shouldTriggerActivate } from '../Trigger';
-import CashSubsystem from './CashSubsystem';
+import type FinanceRule from '../../FinanceRule';
+import subtractFederalIncomeTax from '../../subtractFederalIncomeTax';
+import type { TimeSeriesTopLevelConfig } from '../../TimeSeriesTopLevelConfig';
+import { shouldTriggerActivate } from '../../Trigger';
+import Cash from '../Cash';
+import SubsystemsExecState from '../helpers/SubsystemsExecState';
+import IndexFundBalance from '../IndexFundBalance';
+import IndexFundTransfers from '../IndexFundTransfers';
+import Jobs from '../Jobs';
+import Mortgage from '../Mortgage';
+import TargetCash from '../TargetCash';
+import TotalExpenses from '../TotalExpenses';
+import TotalIncome from '../TotalIncome';
+import UncategorizedExpenses from '../UncategorizedExpenses';
 import type {
   FinanceSubsystemStaticConfig,
   Subsystems,
 } from './FinanceStateSubsystemsTypes';
-import SubsystemsExecState from './helpers/SubsystemsExecState';
-import IndexFundTransfers from './IndexFundTransfers';
-import JobsSubsystem from './JobsSubsystem';
-import MortgageSubsystem from './MortgageSubsystem';
 import type { Subsystem } from './Subsystem';
-import TargetCash from './TargetCash';
-import TotalExpensesSubsystem from './TotalExpensesSubsystem';
-import TotalIncomeSubsystem from './TotalIncomeSubsystem';
-import UncategorizedExpensesSubsystem from './UncategorizedExpensesSubsystem';
 
 export default class FinanceStateSubsystems {
   private readonly props: Subsystems;
@@ -28,28 +29,39 @@ export default class FinanceStateSubsystems {
   }
 
   public static fromStaticConfig({
-    staticConfig: { cash, jobs, mortgage, targetCash, uncategorizedExpenses },
+    staticConfig: {
+      cash,
+      jobs,
+      indexFundBalance,
+      mortgage,
+      targetCash,
+      uncategorizedExpenses,
+    },
     dateRange,
   }: {
     readonly staticConfig: FinanceSubsystemStaticConfig;
     readonly dateRange: DateRange;
   }): FinanceStateSubsystems {
-    const cashSubsystem = CashSubsystem.fromStaticConfig({
+    const cashSubsystem = Cash.fromStaticConfig({
       cash,
       dateRange,
     });
     return new FinanceStateSubsystems({
       cash: cashSubsystem,
+      indexFundBalance: IndexFundBalance.fromStaticConfig({
+        dateRange,
+        indexFundBalance,
+      }),
       indexFundTransfers: IndexFundTransfers.fromStaticConfig({ dateRange }),
-      jobs: JobsSubsystem.fromStaticConfig(jobs),
-      mortgage: MortgageSubsystem.fromStaticConfig({ dateRange, mortgage }),
+      jobs: Jobs.fromStaticConfig(jobs),
+      mortgage: Mortgage.fromStaticConfig({ dateRange, mortgage }),
       targetCash: TargetCash.fromStaticConfig({
         cashBuilder: cashSubsystem.builder,
         targetCash,
       }),
-      totalExpenses: TotalExpensesSubsystem.fromStaticConfig({ dateRange }),
-      totalIncome: TotalIncomeSubsystem.fromStaticConfig({ dateRange }),
-      uncategorizedExpenses: UncategorizedExpensesSubsystem.fromStaticConfig({
+      totalExpenses: TotalExpenses.fromStaticConfig({ dateRange }),
+      totalIncome: TotalIncome.fromStaticConfig({ dateRange }),
+      uncategorizedExpenses: UncategorizedExpenses.fromStaticConfig({
         dateRange,
         uncategorizedExpenses,
       }),
