@@ -27,6 +27,9 @@ export default function App() {
           cash: {
             currentValue: 227e3,
           },
+          indexFundBalance: {
+            initialBalance: 23698.14,
+          },
           jobs: {
             currentJobs: [],
           },

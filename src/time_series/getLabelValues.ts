@@ -4,7 +4,10 @@ export default function getLabelValues(
   { minValue, maxValue }: Omit<ValueRange, 'labelValues'>,
   step: number,
 ): Array<number> {
-  const absoluteMax = Math.max(Math.abs(minValue), Math.abs(maxValue));
+  const absoluteMax = Math.max(
+    1,
+    Math.max(Math.abs(minValue), Math.abs(maxValue)),
+  );
   if (absoluteMax < 1) {
     throw new Error('getLabelValues does not support absoluteMax < 1');
   }

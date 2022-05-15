@@ -2,7 +2,8 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<{
   apr: string;
@@ -19,10 +20,11 @@ export type Props = Readonly<
   }
 >;
 
-export default class MortgageSubsystem implements Subsystem {
+export default class Mortgage extends SubsystemBase implements Subsystem {
   private readonly props: Props;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
   }
 
@@ -32,8 +34,8 @@ export default class MortgageSubsystem implements Subsystem {
   }: {
     dateRange: DateRange;
     mortgage: StaticConfig;
-  }): MortgageSubsystem {
-    return new MortgageSubsystem({
+  }): Mortgage {
+    return new Mortgage({
       ...staticConfig,
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
         dateRange,
@@ -42,18 +44,14 @@ export default class MortgageSubsystem implements Subsystem {
     });
   }
 
-  public doesReportExpenses(): boolean {
+  public override doesReportExpenses(): boolean {
     return true;
   }
 
-  public doesReportIncome(): boolean {
-    return false;
-  }
-
-  public resolve(api: ResolveExecAPI): MortgageSubsystem {
+  public resolve(api: ResolveExecAPI): Mortgage {
     if (this.derivedValuesInternal) {
       throw new Error(
-        'MortgageSubsystem.resolve should only be called once per instance',
+        'Mortgage.resolve should only be called once per instance',
       );
     }
     this.derivedValuesInternal = this.computeDerivedValues(api);
@@ -65,7 +63,7 @@ export default class MortgageSubsystem implements Subsystem {
     return this.derivedValuesInternal.nextState;
   }
 
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+  public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [this.props.timeSeriesBuilder.getTopLevelConfig()];
   }
 
@@ -81,7 +79,7 @@ export default class MortgageSubsystem implements Subsystem {
     if (isForeclosed) {
       return {
         expensesAmount: 0,
-        nextState: new MortgageSubsystem(this.props),
+        nextState: new Mortgage(this.props),
         payments: NO_PAYMENTS,
       };
     }
@@ -96,7 +94,7 @@ export default class MortgageSubsystem implements Subsystem {
     if (!successfullyWithdrawn) {
       return {
         expensesAmount: amountWithdrawn,
-        nextState: new MortgageSubsystem({
+        nextState: new Mortgage({
           ...this.props,
           isForeclosed: true,
         }),
@@ -116,7 +114,7 @@ export default class MortgageSubsystem implements Subsystem {
       const totalExpense = interestPayment + insurance + principal + tax;
       return {
         expensesAmount: totalExpense,
-        nextState: new MortgageSubsystem({
+        nextState: new Mortgage({
           ...this.props,
           currentBalance: newBalance,
         }),
@@ -149,7 +147,7 @@ export default class MortgageSubsystem implements Subsystem {
 
 type DerivedValues = Readonly<{
   expensesAmount: number;
-  nextState: MortgageSubsystem;
+  nextState: Mortgage;
   payments: Readonly<{
     insurance: number;
     interest: number;

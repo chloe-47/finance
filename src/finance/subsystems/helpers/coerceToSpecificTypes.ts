@@ -1,16 +1,18 @@
-import CashSubsystem from '../CashSubsystem';
-import type { Subsystems } from '../FinanceStateSubsystemsTypes';
+import CashSubsystem from '../Cash';
+import IndexFundBalance from '../IndexFundBalance';
 import IndexFundTransfers from '../IndexFundTransfers';
-import JobsSubsystem from '../JobsSubsystem';
-import MortgageSubsystem from '../MortgageSubsystem';
-import type { Subsystem } from '../Subsystem';
+import Jobs from '../Jobs';
+import Mortgage from '../Mortgage';
+import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
+import type { Subsystem } from '../shared/Subsystem';
 import TargetCash from '../TargetCash';
-import TotalExpensesSubsystem from '../TotalExpensesSubsystem';
-import TotalIncomeSubsystem from '../TotalIncomeSubsystem';
-import UncategorizedExpensesSubsystem from '../UncategorizedExpensesSubsystem';
+import TotalExpenses from '../TotalExpenses';
+import TotalIncome from '../TotalIncome';
+import UncategorizedExpenses from '../UncategorizedExpenses';
 
 type GenericTypes = Readonly<{
   cash: Subsystem;
+  indexFundBalance: Subsystem;
   indexFundTransfers: Subsystem;
   jobs: Subsystem;
   mortgage: Subsystem;
@@ -22,6 +24,7 @@ type GenericTypes = Readonly<{
 
 export default function coerceToSpecificTypes({
   cash,
+  indexFundBalance,
   indexFundTransfers,
   jobs,
   mortgage,
@@ -38,6 +41,15 @@ export default function coerceToSpecificTypes({
       }
       return nextState;
     })(),
+    indexFundBalance: (() => {
+      const nextState = indexFundBalance;
+      if (!(nextState instanceof IndexFundBalance)) {
+        throw new Error(
+          'IndexFundBalance.resolve() must return IndexFundBalance',
+        );
+      }
+      return nextState;
+    })(),
     indexFundTransfers: (() => {
       const nextState = indexFundTransfers;
       if (!(nextState instanceof IndexFundTransfers)) {
@@ -49,17 +61,15 @@ export default function coerceToSpecificTypes({
     })(),
     jobs: (() => {
       const nextState = jobs;
-      if (!(nextState instanceof JobsSubsystem)) {
-        throw new Error('JobsSubsystem.resolve() must return JobsSubsystem');
+      if (!(nextState instanceof Jobs)) {
+        throw new Error('Jobs.resolve() must return Jobs');
       }
       return nextState;
     })(),
     mortgage: (() => {
       const nextState = mortgage;
-      if (!(nextState instanceof MortgageSubsystem)) {
-        throw new Error(
-          'MortgageSubsystem.resolve() must return MortgageSubsystem',
-        );
+      if (!(nextState instanceof Mortgage)) {
+        throw new Error('Mortgage.resolve() must return Mortgage');
       }
       return nextState;
     })(),
@@ -72,27 +82,23 @@ export default function coerceToSpecificTypes({
     })(),
     totalExpenses: (() => {
       const nextState = totalExpenses;
-      if (!(nextState instanceof TotalExpensesSubsystem)) {
-        throw new Error(
-          'TotalExpensesSubsystem.resolve() must return TotalExpensesSubsystem',
-        );
+      if (!(nextState instanceof TotalExpenses)) {
+        throw new Error('TotalExpenses.resolve() must return TotalExpenses');
       }
       return nextState;
     })(),
     totalIncome: (() => {
       const nextState = totalIncome;
-      if (!(nextState instanceof TotalIncomeSubsystem)) {
-        throw new Error(
-          'TotalIncomeSubsystem.resolve() must return TotalIncomeSubsystem',
-        );
+      if (!(nextState instanceof TotalIncome)) {
+        throw new Error('TotalIncome.resolve() must return TotalIncome');
       }
       return nextState;
     })(),
     uncategorizedExpenses: (() => {
       const nextState = uncategorizedExpenses;
-      if (!(nextState instanceof UncategorizedExpensesSubsystem)) {
+      if (!(nextState instanceof UncategorizedExpenses)) {
         throw new Error(
-          'UncategorizedExpensesSubsystem.resolve() must return UncategorizedExpensesSubsystem',
+          'UncategorizedExpenses.resolve() must return UncategorizedExpenses',
         );
       }
       return nextState;

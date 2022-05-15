@@ -1,4 +1,4 @@
-import type { Subsystems } from '../FinanceStateSubsystemsTypes';
+import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
 
 export default class TriggerEvalAPI {
   private readonly props: Subsystems;

@@ -1,8 +1,8 @@
 import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
-import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<{
   currentMonthlyValue: number;
@@ -14,10 +14,14 @@ export type Props = Readonly<
   }
 >;
 
-export default class UncategorizedExpensesSubsystem implements Subsystem {
+export default class UncategorizedExpenses
+  extends SubsystemBase
+  implements Subsystem
+{
   private readonly props: Props;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
   }
 
@@ -27,8 +31,8 @@ export default class UncategorizedExpensesSubsystem implements Subsystem {
   }: {
     dateRange: DateRange;
     uncategorizedExpenses: StaticConfig;
-  }): UncategorizedExpensesSubsystem {
-    return new UncategorizedExpensesSubsystem({
+  }): UncategorizedExpenses {
+    return new UncategorizedExpenses({
       ...staticConfig,
       timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderSingleSeries({
         dateRange,
@@ -38,15 +42,11 @@ export default class UncategorizedExpensesSubsystem implements Subsystem {
     });
   }
 
-  public doesReportExpenses(): boolean {
+  public override doesReportExpenses(): boolean {
     return true;
   }
 
-  public doesReportIncome(): boolean {
-    return false;
-  }
-
-  public resolve(api: ResolveExecAPI): UncategorizedExpensesSubsystem {
+  public resolve(api: ResolveExecAPI): UncategorizedExpenses {
     const expenseValue = this.props.currentMonthlyValue;
     const { amountWithdrawn } = api.withdrawCashForExpenseIfAvailable(
       this,
@@ -54,9 +54,5 @@ export default class UncategorizedExpensesSubsystem implements Subsystem {
     );
     this.props.timeSeriesBuilder.addPoint(api.date, amountWithdrawn);
     return this;
-  }
-
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    return [];
   }
 }

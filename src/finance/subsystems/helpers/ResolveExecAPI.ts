@@ -1,6 +1,6 @@
 import type Date_ from 'src/dates/Date_';
-import type { Subsystems } from '../FinanceStateSubsystemsTypes';
-import type { Subsystem } from '../Subsystem';
+import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
+import type { Subsystem } from '../shared/Subsystem';
 import type { ResolvedTargetCash } from '../TargetCash';
 import type SubsystemResolver from './SubsystemResolver';
 
@@ -31,7 +31,7 @@ export default class ResolveExecAPI {
   ): WithdrawResult {
     if (!subsystem.doesReportExpenses()) {
       throw new Error(
-        'Subsystem called reportExpense but returned false for doesReportExpenses',
+        'Subsystem called withdrawCashForExpenseIfAvailable but returned false for doesReportExpenses',
       );
     }
     const { amountWithdrawn, successfullyWithdrawn } =
@@ -42,6 +42,22 @@ export default class ResolveExecAPI {
       this.props.subsystems.totalExpenses.dynamicReportExpense(expenseValue);
     }
     return { amountWithdrawn, successfullyWithdrawn };
+  }
+
+  public withdrawOrDepositCashForTransfer(
+    subsystem: Subsystem,
+    withdrawAmount: number,
+  ): WithdrawResult {
+    if (!subsystem.doesReportTransfer()) {
+      throw new Error(
+        'Subsystem called withdrawOrDepositCashForTransfer but returned false for doesReportTransfer',
+      );
+    }
+    const { amountWithdrawn } =
+      this.props.subsystems.cash.dynamicWithdrawOrDepositCashForTransfer(
+        withdrawAmount,
+      );
+    return { amountWithdrawn, successfullyWithdrawn: true };
   }
 
   public reportIncome(subsystem: Subsystem, incomeValue: number): void {
@@ -66,6 +82,12 @@ export default class ResolveExecAPI {
       .map((s) => this.props.resolver.resolve(s));
   }
 
+  public resolveAllTransfers(): void {
+    this.props.resolver.allSubsystems
+      .filter((s) => s.doesReportTransfer())
+      .map((s) => this.props.resolver.resolve(s));
+  }
+
   public getTotalExpenses(): number {
     this.props.resolver.resolve(this.props.subsystems.totalExpenses);
     return this.props.subsystems.totalExpenses.resolvedValue;
@@ -78,5 +100,10 @@ export default class ResolveExecAPI {
   public getTargetCash(): ResolvedTargetCash {
     this.props.resolver.resolve(this.props.subsystems.targetCash);
     return this.props.subsystems.targetCash.getResolvedValue();
+  }
+
+  public getIndexFundDepositAmount(): number {
+    this.props.resolver.resolve(this.props.subsystems.indexFundTransfers);
+    return this.props.subsystems.indexFundTransfers.getResolvedValue();
   }
 }

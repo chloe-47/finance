@@ -1,6 +1,6 @@
 import type Date_ from 'src/dates/Date_';
-import type { Subsystems } from '../FinanceStateSubsystemsTypes';
-import type { Subsystem } from '../Subsystem';
+import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
+import type { Subsystem } from '../shared/Subsystem';
 import coerceToSpecificTypes from './coerceToSpecificTypes';
 import ResolveExecAPI from './ResolveExecAPI';
 
@@ -72,6 +72,9 @@ export default class SubsystemResolver {
   public getNextSubsystems(): Subsystems {
     return coerceToSpecificTypes({
       cash: this.getAssertResolved(this.props.subsystems.cash),
+      indexFundBalance: this.getAssertResolved(
+        this.props.subsystems.indexFundBalance,
+      ),
       indexFundTransfers: this.getAssertResolved(
         this.props.subsystems.indexFundTransfers,
       ),

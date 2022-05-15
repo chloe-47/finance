@@ -2,7 +2,8 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<Record<never, never>>;
 
@@ -12,10 +13,15 @@ export type Props = Readonly<
   }
 >;
 
-export default class IndexFundTransfers implements Subsystem {
+export default class IndexFundTransfers
+  extends SubsystemBase
+  implements Subsystem
+{
   private readonly props: Props;
+  private resolvedValue: number | undefined;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
   }
 
@@ -33,14 +39,6 @@ export default class IndexFundTransfers implements Subsystem {
     });
   }
 
-  public doesReportExpenses(): boolean {
-    return false;
-  }
-
-  public doesReportIncome(): boolean {
-    return false;
-  }
-
   public resolve(api: ResolveExecAPI): IndexFundTransfers {
     const initialCash = api.getInitialCash();
     const targetCash = api.getTargetCash();
@@ -52,10 +50,21 @@ export default class IndexFundTransfers implements Subsystem {
     }
 
     this.props.timeSeriesBuilder.addPoint(api.date, indexFundDepositAmount);
+    this.resolvedValue = indexFundDepositAmount;
     return this;
   }
 
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
+  public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
     return [this.props.timeSeriesBuilder.getTopLevelConfig()];
+  }
+
+  public getResolvedValue(): number {
+    const { resolvedValue } = this;
+    if (resolvedValue === undefined) {
+      throw new Error(
+        'Must call IndexFundTransfers.resolve() before IndexFundTransfers.getResolvedValue()',
+      );
+    }
+    return resolvedValue;
   }
 }

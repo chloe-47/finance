@@ -1,8 +1,8 @@
 import type { JobStaticConfig } from '../Job';
 import Job from '../Job';
-import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<{
   currentJobs: ReadonlyArray<JobStaticConfig>;
@@ -12,26 +12,23 @@ export type Props = Readonly<{
   currentJobs: ReadonlyArray<Job>;
 }>;
 
-export default class JobsSubsystem implements Subsystem {
+export default class Jobs extends SubsystemBase implements Subsystem {
   private readonly props: Props;
   private readonly dynamicNextJobs: Array<Job>;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
     this.dynamicNextJobs = [...props.currentJobs];
   }
 
-  public static fromStaticConfig({ currentJobs }: StaticConfig): JobsSubsystem {
-    return new JobsSubsystem({
+  public static fromStaticConfig({ currentJobs }: StaticConfig): Jobs {
+    return new Jobs({
       currentJobs: currentJobs.map((staticConfig) => new Job(staticConfig)),
     });
   }
 
-  public doesReportExpenses(): boolean {
-    return false;
-  }
-
-  public doesReportIncome(): boolean {
+  public override doesReportIncome(): boolean {
     return true;
   }
 
@@ -44,13 +41,9 @@ export default class JobsSubsystem implements Subsystem {
 
   public resolve(api: ResolveExecAPI): Subsystem {
     api.reportIncome(this, this.getTotalIncome());
-    return new JobsSubsystem({
+    return new Jobs({
       currentJobs: this.dynamicNextJobs,
     });
-  }
-
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    return [];
   }
 
   public get isUnemployed(): boolean {

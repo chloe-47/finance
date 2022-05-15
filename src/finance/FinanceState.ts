@@ -5,7 +5,7 @@ import type {
   FinanceStateProps,
   FinanceStateStaticConfig,
 } from './FinanceStateProps';
-import FinanceStateSubsystems from './subsystems/FinanceStateSubsystems';
+import FinanceStateSubsystems from './subsystems/shared/FinanceStateSubsystems';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';
 
 type NextStateArgs = Readonly<{

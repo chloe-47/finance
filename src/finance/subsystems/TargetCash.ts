@@ -1,7 +1,7 @@
 import type TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
-import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './Subsystem';
+import type { Subsystem } from './shared/Subsystem';
+import SubsystemBase from './shared/SubsystemBase';
 
 export type StaticConfig = Readonly<{
   min: [number, 'years of expenses'];
@@ -29,11 +29,12 @@ export type CreationArgs = Readonly<{
   cashBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
 }>;
 
-export default class TargetCash implements Subsystem {
+export default class TargetCash extends SubsystemBase implements Subsystem {
   private readonly props: Props;
   private resolvedValue: ResolvedTargetCash | undefined;
 
   private constructor(props: Props) {
+    super();
     this.props = props;
   }
 
@@ -51,14 +52,6 @@ export default class TargetCash implements Subsystem {
       ...resolvedConfig,
       timeSeriesBuilder,
     });
-  }
-
-  public doesReportExpenses(): boolean {
-    return false;
-  }
-
-  public doesReportIncome(): boolean {
-    return false;
   }
 
   public resolve(api: ResolveExecAPI): TargetCash {
@@ -79,10 +72,6 @@ export default class TargetCash implements Subsystem {
     return new TargetCash({
       ...this.props,
     });
-  }
-
-  public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    return [];
   }
 
   public getResolvedValue(): ResolvedTargetCash {

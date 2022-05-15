@@ -1,5 +1,5 @@
 import type Date_ from 'src/dates/Date_';
-import type { Subsystems } from '../FinanceStateSubsystemsTypes';
+import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
 import ActionExecAPI from './ActionExecAPI';
 import SubsystemResolver from './SubsystemResolver';
 import TriggerEvalAPI from './TriggerEvalAPI';
