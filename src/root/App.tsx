@@ -6,7 +6,9 @@ import 'src/root/styles.css';
 import TimeSeriesModule from 'src/time_series/TimeSeriesModule';
 
 export default function App() {
-  const { ref, height: screenHeight, width: screenWidth } = useMeasureElement();
+  const { ref, rect } = useMeasureElement();
+  const screenWidth = rect?.width;
+  const screenHeight = rect?.height;
   const system = React.useMemo(
     () =>
       new FinanceSystem({

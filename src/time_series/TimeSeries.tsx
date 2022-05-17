@@ -24,11 +24,14 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
   );
   const [xOffset, setXOffset] = React.useState<Offset | undefined>();
   const [yOffset, setYOffset] = React.useState<Offset | undefined>();
-  const { ref: measureXAxisRef, height: xAxisHeight } = useMeasureElement();
-  const { ref: measureYAxisRef, width: yAxisWidth } = useMeasureElement({
+  const { ref: measureXAxisRef, rect: xAxisRect } = useMeasureElement();
+  const xAxisHeight = xAxisRect?.height;
+  const { ref: measureYAxisRef, rect: yAxisRect } = useMeasureElement({
     debounceZeroes: true,
   });
-  const { ref: measureLabelRef, width: labelWidth } = useMeasureElement();
+  const yAxisWidth = yAxisRect?.width;
+  const { ref: measureLabelRef, rect: labelRect } = useMeasureElement();
+  const labelWidth = labelRect?.width;
   const withoutXAxisHeight = useSubtractHeight(definition, xAxisHeight);
   const dataViewDefinition = useSubtractWidth(
     useSubtractWidth(withoutXAxisHeight, yAxisWidth),
