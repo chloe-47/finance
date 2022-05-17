@@ -1,15 +1,7 @@
 import type Date_ from 'src/dates/Date_';
 import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
-import type { Subsystem } from '../shared/Subsystem';
-import coerceToSpecificTypes from './coerceToSpecificTypes';
+import type Subsystem from '../shared/Subsystem';
 import ResolveExecAPI from './ResolveExecAPI';
-
-type ResolveState =
-  | 'Not Started'
-  | 'In Progress'
-  | Readonly<{ resolved: Subsystem }>;
-
-type AllStates = Map<Subsystem, ResolveState>;
 
 type Props = Readonly<{
   subsystems: Subsystems;
@@ -18,17 +10,10 @@ type Props = Readonly<{
 
 export default class SubsystemResolver {
   private readonly props: Props;
-  private readonly resolveStates: AllStates;
   private readonly resolveExecAPI: ResolveExecAPI;
 
   public constructor(props: Props) {
     this.props = props;
-    this.resolveStates = new Map(
-      Object.values(props.subsystems).map((subsystem) => [
-        subsystem,
-        'Not Started',
-      ]),
-    );
     this.resolveExecAPI = new ResolveExecAPI({
       date: props.date,
       resolver: this,
@@ -36,67 +21,33 @@ export default class SubsystemResolver {
     });
   }
 
-  public get allSubsystems(): Subsystem[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public get allSubsystems(): Array<Subsystem<any>> {
     return Object.values(this.props.subsystems);
   }
 
-  public resolveAll(): void {
-    this.allSubsystems
-      .sort((a, b) =>
-        // Resolve all income sources first, then all expenses,
-        // then everything else
-        a.doesReportIncome() ||
-        (!b.doesReportIncome() && a.doesReportExpenses())
-          ? -1
-          : 1,
-      )
-      .forEach((s) => this.resolve(s));
-  }
-
-  public resolve(subsystem: Subsystem): Subsystem {
-    const state = this.resolveStates.get(subsystem);
-    if (state === undefined) {
-      throw new Error('State not available for subsystem');
-    } else if (state === 'In Progress') {
-      throw new Error('Circular subsystem resolution dependency');
-    } else if (typeof state === 'object' && 'resolved' in state) {
-      return state.resolved;
-    } else {
-      this.resolveStates.set(subsystem, 'In Progress');
-      const nextState = subsystem.resolve(this.resolveExecAPI);
-      this.resolveStates.set(subsystem, { resolved: nextState });
-      return nextState;
-    }
-  }
-
   public getNextSubsystems(): Subsystems {
-    return coerceToSpecificTypes({
-      cash: this.getAssertResolved(this.props.subsystems.cash),
-      indexFundBalance: this.getAssertResolved(
-        this.props.subsystems.indexFundBalance,
+    return {
+      cash: this.props.subsystems.cash.resolve(this.resolveExecAPI),
+      indexFundBalance: this.props.subsystems.indexFundBalance.resolve(
+        this.resolveExecAPI,
       ),
-      indexFundTransfers: this.getAssertResolved(
-        this.props.subsystems.indexFundTransfers,
+      indexFundTransfers: this.props.subsystems.indexFundTransfers.resolve(
+        this.resolveExecAPI,
       ),
-      jobs: this.getAssertResolved(this.props.subsystems.jobs),
-      mortgage: this.getAssertResolved(this.props.subsystems.mortgage),
-      targetCash: this.getAssertResolved(this.props.subsystems.targetCash),
-      totalExpenses: this.getAssertResolved(
-        this.props.subsystems.totalExpenses,
+      jobs: this.props.subsystems.jobs.resolve(this.resolveExecAPI),
+      mortgage: this.props.subsystems.mortgage.resolve(this.resolveExecAPI),
+      targetCash: this.props.subsystems.targetCash.resolve(this.resolveExecAPI),
+      totalExpenses: this.props.subsystems.totalExpenses.resolve(
+        this.resolveExecAPI,
       ),
-      totalIncome: this.getAssertResolved(this.props.subsystems.totalIncome),
-      uncategorizedExpenses: this.getAssertResolved(
-        this.props.subsystems.uncategorizedExpenses,
+      totalIncome: this.props.subsystems.totalIncome.resolve(
+        this.resolveExecAPI,
       ),
-    });
-  }
-
-  private getAssertResolved(subsystem: Subsystem): Subsystem {
-    const state = this.resolveStates.get(subsystem);
-    if (!(typeof state === 'object' && 'resolved' in state)) {
-      throw new Error('Not resolved');
-    }
-    const { resolved } = state;
-    return resolved;
+      uncategorizedExpenses:
+        this.props.subsystems.uncategorizedExpenses.resolve(
+          this.resolveExecAPI,
+        ),
+    };
   }
 }

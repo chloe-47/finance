@@ -1,8 +1,7 @@
 import type { JobStaticConfig } from '../Job';
 import Job from '../Job';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<{
   currentJobs: ReadonlyArray<JobStaticConfig>;
@@ -12,7 +11,7 @@ export type Props = Readonly<{
   currentJobs: ReadonlyArray<Job>;
 }>;
 
-export default class Jobs extends SubsystemBase implements Subsystem {
+export default class Jobs extends Subsystem<Jobs> {
   private readonly props: Props;
   private readonly dynamicNextJobs: Array<Job>;
 
@@ -39,8 +38,8 @@ export default class Jobs extends SubsystemBase implements Subsystem {
     );
   }
 
-  public resolve(api: ResolveExecAPI): Subsystem {
-    api.reportIncome(this, this.getTotalIncome());
+  public override resolveImpl(api: ResolveExecAPI): Jobs {
+    api.reportIncome<Jobs>(this, this.getTotalIncome());
     return new Jobs({
       currentJobs: this.dynamicNextJobs,
     });

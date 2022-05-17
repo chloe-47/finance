@@ -3,8 +3,7 @@ import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTo
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
 import type { WithdrawResult } from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<{
   currentValue: number;
@@ -16,7 +15,7 @@ export type CashProps = Readonly<
   }
 >;
 
-export default class Cash extends SubsystemBase implements Subsystem {
+export default class Cash extends Subsystem<Cash> {
   private readonly props: CashProps;
   private dynamicValue: number;
 
@@ -47,7 +46,7 @@ export default class Cash extends SubsystemBase implements Subsystem {
     return this.props.timeSeriesBuilder;
   }
 
-  public resolve(api: ResolveExecAPI): Cash {
+  public override resolveImpl(api: ResolveExecAPI): Cash {
     this.props.timeSeriesBuilder.addPointSingleSeries({
       date: api.date,
       series: 'cash',

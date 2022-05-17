@@ -2,8 +2,7 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<{
   initialBalance: number;
@@ -14,10 +13,7 @@ export type Props = Readonly<{
   timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderSingleSeries;
 }>;
 
-export default class IndexFundBalance
-  extends SubsystemBase
-  implements Subsystem
-{
+export default class IndexFundBalance extends Subsystem<IndexFundBalance> {
   private readonly props: Props;
 
   private constructor(props: Props) {
@@ -46,16 +42,17 @@ export default class IndexFundBalance
     return true;
   }
 
-  public resolve(api: ResolveExecAPI): IndexFundBalance {
+  public override resolveImpl(api: ResolveExecAPI): IndexFundBalance {
     const currentBalance = this.props.balance;
     const depositAmount = Math.max(
       api.getIndexFundDepositAmount(),
       -1 * currentBalance,
     );
-    const { amountWithdrawn } = api.withdrawOrDepositCashForTransfer(
-      this,
-      depositAmount,
-    );
+    const { amountWithdrawn } =
+      api.withdrawOrDepositCashForTransfer<IndexFundBalance>(
+        this,
+        depositAmount,
+      );
     const newBalance = currentBalance + amountWithdrawn;
     // Assuming 2% YoY market growth
     const newBalanceWithMarketGrowth = newBalance * (1 + 0.02 / 12);

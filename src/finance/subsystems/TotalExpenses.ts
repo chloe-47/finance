@@ -2,8 +2,7 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<Record<never, never>>;
 
@@ -13,7 +12,7 @@ export type Props = Readonly<
   }
 >;
 
-export default class TotalExpenses extends SubsystemBase implements Subsystem {
+export default class TotalExpenses extends Subsystem<TotalExpenses> {
   private readonly props: Props;
   private dynamicTotalExpenses: number;
 
@@ -37,7 +36,7 @@ export default class TotalExpenses extends SubsystemBase implements Subsystem {
     });
   }
 
-  public resolve(api: ResolveExecAPI): TotalExpenses {
+  public override resolveImpl(api: ResolveExecAPI): TotalExpenses {
     api.resolveAllExpenses();
     this.props.timeSeriesBuilder.addPoint(api.date, this.dynamicTotalExpenses);
     return new TotalExpenses({

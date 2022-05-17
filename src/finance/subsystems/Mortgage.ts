@@ -2,8 +2,7 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderMultiSeries from '../builders/TimeSeriesTopLevelConfigBuilderMultiSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<{
   apr: string;
@@ -20,7 +19,7 @@ export type Props = Readonly<
   }
 >;
 
-export default class Mortgage extends SubsystemBase implements Subsystem {
+export default class Mortgage extends Subsystem<Mortgage> {
   private readonly props: Props;
 
   private constructor(props: Props) {
@@ -48,7 +47,7 @@ export default class Mortgage extends SubsystemBase implements Subsystem {
     return true;
   }
 
-  public resolve(api: ResolveExecAPI): Mortgage {
+  public override resolveImpl(api: ResolveExecAPI): Mortgage {
     if (this.derivedValuesInternal) {
       throw new Error(
         'Mortgage.resolve should only be called once per instance',
@@ -89,7 +88,7 @@ export default class Mortgage extends SubsystemBase implements Subsystem {
       Math.min(fixedMonthlyPayment, currentBalance) + insurance + tax;
 
     const { amountWithdrawn, successfullyWithdrawn } =
-      api.withdrawCashForExpenseIfAvailable(this, expenseAmount);
+      api.withdrawCashForExpenseIfAvailable<Mortgage>(this, expenseAmount);
 
     if (!successfullyWithdrawn) {
       return {

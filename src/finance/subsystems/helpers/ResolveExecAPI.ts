@@ -1,6 +1,6 @@
 import type Date_ from 'src/dates/Date_';
 import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
-import type { Subsystem } from '../shared/Subsystem';
+import type Subsystem from '../shared/Subsystem';
 import type { ResolvedTargetCash } from '../TargetCash';
 import type SubsystemResolver from './SubsystemResolver';
 
@@ -25,8 +25,8 @@ export default class ResolveExecAPI {
     return this.props.date;
   }
 
-  public withdrawCashForExpenseIfAvailable(
-    subsystem: Subsystem,
+  public withdrawCashForExpenseIfAvailable<T extends Subsystem<T>>(
+    subsystem: T,
     expenseValue: number,
   ): WithdrawResult {
     if (!subsystem.doesReportExpenses()) {
@@ -44,8 +44,8 @@ export default class ResolveExecAPI {
     return { amountWithdrawn, successfullyWithdrawn };
   }
 
-  public withdrawOrDepositCashForTransfer(
-    subsystem: Subsystem,
+  public withdrawOrDepositCashForTransfer<T extends Subsystem<T>>(
+    subsystem: T,
     withdrawAmount: number,
   ): WithdrawResult {
     if (!subsystem.doesReportTransfer()) {
@@ -60,7 +60,10 @@ export default class ResolveExecAPI {
     return { amountWithdrawn, successfullyWithdrawn: true };
   }
 
-  public reportIncome(subsystem: Subsystem, incomeValue: number): void {
+  public reportIncome<T extends Subsystem<T>>(
+    subsystem: T,
+    incomeValue: number,
+  ): void {
     if (!subsystem.doesReportIncome()) {
       throw new Error(
         'Subsystem called reportExpense but returned false for doesReportIncome',
@@ -73,23 +76,23 @@ export default class ResolveExecAPI {
   public resolveAllIncome(): void {
     this.props.resolver.allSubsystems
       .filter((s) => s.doesReportIncome())
-      .map((s) => this.props.resolver.resolve(s));
+      .forEach((s) => s.resolve(this));
   }
 
   public resolveAllExpenses(): void {
     this.props.resolver.allSubsystems
       .filter((s) => s.doesReportExpenses())
-      .map((s) => this.props.resolver.resolve(s));
+      .forEach((s) => s.resolve(this));
   }
 
   public resolveAllTransfers(): void {
     this.props.resolver.allSubsystems
       .filter((s) => s.doesReportTransfer())
-      .map((s) => this.props.resolver.resolve(s));
+      .forEach((s) => s.resolve(this));
   }
 
   public getTotalExpenses(): number {
-    this.props.resolver.resolve(this.props.subsystems.totalExpenses);
+    this.props.subsystems.totalExpenses.resolve(this);
     return this.props.subsystems.totalExpenses.resolvedValue;
   }
 
@@ -98,12 +101,12 @@ export default class ResolveExecAPI {
   }
 
   public getTargetCash(): ResolvedTargetCash {
-    this.props.resolver.resolve(this.props.subsystems.targetCash);
+    this.props.subsystems.targetCash.resolve(this);
     return this.props.subsystems.targetCash.getResolvedValue();
   }
 
   public getIndexFundDepositAmount(): number {
-    this.props.resolver.resolve(this.props.subsystems.indexFundTransfers);
+    this.props.subsystems.indexFundTransfers.resolve(this);
     return this.props.subsystems.indexFundTransfers.getResolvedValue();
   }
 }

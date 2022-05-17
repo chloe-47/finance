@@ -19,7 +19,7 @@ import type {
   FinanceSubsystemStaticConfig,
   Subsystems,
 } from './FinanceStateSubsystemsTypes';
-import type { Subsystem } from './Subsystem';
+import type Subsystem from './Subsystem';
 
 export default class FinanceStateSubsystems {
   private readonly props: Subsystems;
@@ -91,12 +91,12 @@ export default class FinanceStateSubsystems {
       }
     });
 
-    state.resolver.resolveAll();
     return new FinanceStateSubsystems(state.resolver.getNextSubsystems());
   }
 
   public getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    const allSubsystems: Subsystem[] = Object.values(this.props);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allSubsystems: Array<Subsystem<any>> = Object.values(this.props);
     return flatten(
       allSubsystems.map((subsystem) => subsystem.getTimeSeriesConfigs()),
     );

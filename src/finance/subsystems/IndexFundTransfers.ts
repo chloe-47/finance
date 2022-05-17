@@ -2,8 +2,7 @@ import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type { TimeSeriesTopLevelConfig } from '../TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<Record<never, never>>;
 
@@ -13,10 +12,7 @@ export type Props = Readonly<
   }
 >;
 
-export default class IndexFundTransfers
-  extends SubsystemBase
-  implements Subsystem
-{
+export default class IndexFundTransfers extends Subsystem<IndexFundTransfers> {
   private readonly props: Props;
   private resolvedValue: number | undefined;
 
@@ -39,7 +35,7 @@ export default class IndexFundTransfers
     });
   }
 
-  public resolve(api: ResolveExecAPI): IndexFundTransfers {
+  public override resolveImpl(api: ResolveExecAPI): IndexFundTransfers {
     const initialCash = api.getInitialCash();
     const targetCash = api.getTargetCash();
     let indexFundDepositAmount = 0;
@@ -51,7 +47,7 @@ export default class IndexFundTransfers
 
     this.props.timeSeriesBuilder.addPoint(api.date, indexFundDepositAmount);
     this.resolvedValue = indexFundDepositAmount;
-    return this;
+    return new IndexFundTransfers(this.props);
   }
 
   public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {

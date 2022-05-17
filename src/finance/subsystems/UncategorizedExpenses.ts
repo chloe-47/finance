@@ -1,8 +1,7 @@
 import type DateRange from 'src/dates/DateRange';
 import TimeSeriesTopLevelConfigBuilderSingleSeries from '../builders/TimeSeriesTopLevelConfigBuilderSingleSeries';
 import type ResolveExecAPI from './helpers/ResolveExecAPI';
-import type { Subsystem } from './shared/Subsystem';
-import SubsystemBase from './shared/SubsystemBase';
+import Subsystem from './shared/Subsystem';
 
 export type StaticConfig = Readonly<{
   currentMonthlyValue: number;
@@ -14,10 +13,7 @@ export type Props = Readonly<
   }
 >;
 
-export default class UncategorizedExpenses
-  extends SubsystemBase
-  implements Subsystem
-{
+export default class UncategorizedExpenses extends Subsystem<UncategorizedExpenses> {
   private readonly props: Props;
 
   private constructor(props: Props) {
@@ -46,13 +42,14 @@ export default class UncategorizedExpenses
     return true;
   }
 
-  public resolve(api: ResolveExecAPI): UncategorizedExpenses {
+  public override resolveImpl(api: ResolveExecAPI): UncategorizedExpenses {
     const expenseValue = this.props.currentMonthlyValue;
-    const { amountWithdrawn } = api.withdrawCashForExpenseIfAvailable(
-      this,
-      expenseValue,
-    );
+    const { amountWithdrawn } =
+      api.withdrawCashForExpenseIfAvailable<UncategorizedExpenses>(
+        this,
+        expenseValue,
+      );
     this.props.timeSeriesBuilder.addPoint(api.date, amountWithdrawn);
-    return this;
+    return new UncategorizedExpenses(this.props);
   }
 }
