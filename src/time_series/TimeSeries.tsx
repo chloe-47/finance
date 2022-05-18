@@ -18,10 +18,9 @@ type Props = Readonly<{
 export default function TimeSeries({ definition }: Props): JSX.Element {
   const [ready, setReady] = React.useState<boolean>(false);
   const [step, setStep] = React.useState<number | undefined>();
-  const valueRange = React.useMemo(
-    () => getValueRange(definition.seriesData.valuesMinAndMax, step ?? 1),
-    [valueRangeKey(definition.seriesData.valuesMinAndMax, step)],
-  );
+  const valueRange = React.useMemo(() => {
+    return getValueRange(definition.seriesData.valuesMinAndMax, step ?? 1);
+  }, [valueRangeKey(definition.seriesData.valuesMinAndMax, step)]);
   const [xOffset, setXOffset] = React.useState<Offset | undefined>();
   const [yOffset, setYOffset] = React.useState<Offset | undefined>();
   const { ref: measureXAxisRef, rect: xAxisRect } = useMeasureElement();
@@ -64,6 +63,7 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
         <td>
           <TimeSeriesDataView
             definition={dataViewDefinition}
+            ready={ready}
             valueRange={valueRange}
             xOffset={xOffset}
             yOffset={yOffset}
@@ -97,8 +97,8 @@ function useSubtractHeight(
   definition: TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
   toSubtract: number | undefined,
 ): TimeSeriesChartDefinitionWithMaybeIncompleteChartSize {
-  return React.useMemo(
-    () => ({
+  return React.useMemo(() => {
+    return {
       ...definition,
       chartSize: {
         ...definition.chartSize,
@@ -107,17 +107,16 @@ function useSubtractHeight(
             ? undefined
             : definition.chartSize.height - toSubtract,
       },
-    }),
-    [definition, toSubtract],
-  );
+    };
+  }, [definition, toSubtract]);
 }
 
 function useSubtractWidth(
   definition: TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
   toSubtract: number | undefined,
 ): TimeSeriesChartDefinitionWithMaybeIncompleteChartSize {
-  return React.useMemo(
-    () => ({
+  return React.useMemo(() => {
+    return {
       ...definition,
       chartSize: {
         ...definition.chartSize,
@@ -126,23 +125,21 @@ function useSubtractWidth(
             ? undefined
             : definition.chartSize.width - toSubtract,
       },
-    }),
-    [definition, toSubtract],
-  );
+    };
+  }, [definition, toSubtract]);
 }
 
 function useSubtractWidthOrUseDefault(
   definition: TimeSeriesChartDefinitionWithViewProps,
   toSubtract: number | undefined,
 ): TimeSeriesChartDefinitionWithViewProps {
-  return React.useMemo(
-    () => ({
+  return React.useMemo(() => {
+    return {
       ...definition,
       chartSize: {
         ...definition.chartSize,
         width: definition.chartSize.width - (toSubtract ?? 0),
       },
-    }),
-    [definition, toSubtract],
-  );
+    };
+  }, [definition, toSubtract]);
 }

@@ -19,9 +19,10 @@ type Props = Readonly<{
   xOffset: Offset | undefined;
   yOffset: Offset | undefined;
   valueRange: ValueRange;
+  ready: boolean;
 }>;
 
-type ImplProps = Omit<Props, 'definition' | 'xOffset' | 'yOffset'> &
+type ImplProps = Omit<Props, 'definition' | 'xOffset' | 'yOffset' | 'ready'> &
   Readonly<{
     definition: TimeSeriesChartDefinitionWithViewProps;
     xOffset: Offset;
@@ -33,6 +34,7 @@ export default function TimeSeriesDataView({
   xOffset,
   yOffset,
   valueRange,
+  ready,
 }: Props): JSX.Element {
   const { chartSize: chartSize_ } = definition;
 
@@ -43,7 +45,7 @@ export default function TimeSeriesDataView({
 
   const { width, height } = chartSize;
 
-  if (xOffset === undefined || yOffset === undefined) {
+  if (xOffset === undefined || yOffset === undefined || !ready) {
     return (
       <div
         style={{
@@ -94,15 +96,15 @@ function TimeSeriesDataViewImpl({
 
   const mappedCoordinates = React.useMemo(
     () =>
-      MappedCoordinates.create({
+      MappedCoordinates.createMappedCoordinates({
+        definition,
         getCoordinates,
-        seriesData,
         xMax,
         xMin,
         yMax,
         yMin,
       }),
-    [getCoordinates, seriesData],
+    [getCoordinates, definition],
   );
 
   const snappedHoverCoordinates = mappedCoordinates.snap(hoverCoordinates);
@@ -188,15 +190,7 @@ function createPath(
   pointRadius: number,
   { color, thickness }: SeriesStyle,
 ): JSX.Element {
-  const d = allCoordinates
-    .map(({ cx, cy }: Coordinates, index: number): string => {
-      // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d#path_commands
-      const prefix = index === 0 ? 'M' : 'L';
-      const x = cx.toFixed(2);
-      const y = cy.toFixed(2);
-      return prefix + ' ' + x + ',' + y;
-    })
-    .join(' ');
+  const d = allCoordinates.map(createPathSegmentForCoordinates).join(' ');
   return (
     <path
       d={d}
@@ -207,4 +201,15 @@ function createPath(
       strokeWidth={thickness === 'thick' ? 1.5 : 0.5}
     />
   );
+
+  function createPathSegmentForCoordinates(
+    coords: Coordinates,
+    index: number,
+  ): string {
+    // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d#path_commands
+    const prefix = index === 0 ? 'M' : 'L';
+    const x = coords.cx.toFixed(2);
+    const y = coords.cy.toFixed(2);
+    return prefix + ' ' + x + ',' + y;
+  }
 }
