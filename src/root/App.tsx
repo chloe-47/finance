@@ -1,5 +1,6 @@
 import * as React from 'react';
 import FinanceSystem from 'src/finance/FinanceSystem';
+import HoverComponentProvider from 'src/hover/HoverComponentProvider';
 import MeasurementsProvider from 'src/measurements/MeasurementsProvider';
 import useMeasureElement from 'src/measurements/useMeasureElement';
 import 'src/root/styles.css';
@@ -81,13 +82,16 @@ export default function App() {
   return (
     <div className="fullScreen" ref={ref}>
       <MeasurementsProvider />
-      <table className="App">
-        <tbody>
-          {configs.map(({ model, key }) => (
-            <TimeSeriesModule key={key} model={model} viewProps={viewProps} />
-          ))}
-        </tbody>
-      </table>
+      <HoverComponentProvider />
+      <div className="topLevelContainer">
+        <table className="App">
+          <tbody>
+            {configs.map(({ model, key }) => (
+              <TimeSeriesModule key={key} model={model} viewProps={viewProps} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

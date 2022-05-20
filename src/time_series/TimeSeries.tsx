@@ -1,11 +1,12 @@
 import * as React from 'react';
 import type { Offset } from 'src/measurements/LabelArray';
 import useMeasureElement from 'src/measurements/useMeasureElement';
-import type {
+import TimeSeriesDataView from 'src/time_series/data_view/TimeSeriesDataView';
+import {
+  getCompleteChartSize,
   TimeSeriesChartDefinitionWithMaybeIncompleteChartSize,
   TimeSeriesChartDefinitionWithViewProps,
 } from 'src/time_series/SeriesTypes';
-import TimeSeriesDataView from 'src/time_series/TimeSeriesDataView';
 import 'src/time_series/TimeSeriesStyles.css';
 import TimeSeriesXAxis from 'src/time_series/TimeSeriesXAxis';
 import getValueRange, { valueRangeKey } from './getValueRange';
@@ -46,6 +47,32 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
     });
   }, [step]);
 
+  const dataView = ((): JSX.Element => {
+    const chartSize = getCompleteChartSize(dataViewDefinition.chartSize);
+    if (chartSize === undefined) {
+      return <div />;
+    }
+    const { width, height } = chartSize;
+    if (xOffset === undefined || yOffset === undefined || !ready) {
+      return (
+        <div
+          style={{
+            height,
+            width,
+          }}
+        />
+      );
+    }
+    return (
+      <TimeSeriesDataView
+        definition={{ ...definition, chartSize }}
+        valueRange={valueRange}
+        xOffset={xOffset}
+        yOffset={yOffset}
+      />
+    );
+  })();
+
   return (
     <>
       <tr style={ready ? {} : { opacity: 0 }}>
@@ -60,15 +87,7 @@ export default function TimeSeries({ definition }: Props): JSX.Element {
             valueRange={valueRange}
           />
         </td>
-        <td>
-          <TimeSeriesDataView
-            definition={dataViewDefinition}
-            ready={ready}
-            valueRange={valueRange}
-            xOffset={xOffset}
-            yOffset={yOffset}
-          />
-        </td>
+        <td>{dataView}</td>
       </tr>
       <tr style={ready ? {} : { opacity: 0 }}>
         <td></td>

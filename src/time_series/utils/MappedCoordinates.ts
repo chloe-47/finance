@@ -32,10 +32,6 @@ type Interval = {
 
 type Args = Readonly<{
   getCoordinates: (point: Point) => Coordinates;
-  xMax: number;
-  xMin: number;
-  yMax: number;
-  yMin: number;
   definition: TimeSeriesChartDefinitionWithViewProps;
 }>;
 
@@ -48,10 +44,6 @@ export default class MappedCoordinates {
   public static createMappedCoordinates({
     getCoordinates,
     definition,
-    xMax,
-    xMin,
-    yMax,
-    yMin,
   }: Args): MappedCoordinates {
     const datesWithXPositions = definition.dateRange.dates.map((date) => ({
       date,
@@ -65,11 +57,11 @@ export default class MappedCoordinates {
       ): DateWithSeriesData {
         const xIntervalMin =
           i === 0
-            ? xMin
+            ? -Infinity
             : (x + (datesWithXPositions[i - 1]?.xPosition ?? 0)) / 2;
         const xIntervalMax =
           i === datesWithXPositions.length - 1
-            ? xMax
+            ? Infinity
             : (x + (datesWithXPositions[i + 1]?.xPosition ?? 0)) / 2;
         const allPointsWithYPositionsSorted = filterNulls(
           seriesData.seriesList.map(function getCoordinatesForOneSeries(
@@ -93,11 +85,11 @@ export default class MappedCoordinates {
           ({ point, label, yPos: y }, i): SeriesPointWithYPosition => {
             const yIntervalMin =
               i === 0
-                ? yMin
+                ? -Infinity
                 : (y + (allPointsWithYPositionsSorted[i - 1]?.yPos ?? 0)) / 2;
             const yIntervalMax =
               i === allPointsWithYPositionsSorted.length - 1
-                ? yMax
+                ? Infinity
                 : (y + (allPointsWithYPositionsSorted[i + 1]?.yPos ?? 0)) / 2;
             return {
               label,
@@ -119,12 +111,7 @@ export default class MappedCoordinates {
     return new MappedCoordinates({ sortedDates });
   }
 
-  snap(
-    hoverCoordinates: HoverCoordinates | undefined,
-  ): HoverCoordinates | undefined {
-    if (hoverCoordinates === undefined) {
-      return undefined;
-    }
+  snap(hoverCoordinates: HoverCoordinates): HoverCoordinates {
     const { x: rawX, y: rawY } = hoverCoordinates;
     const { sortedDates } = this.props;
     for (const { x, sortedSeries, xInterval } of sortedDates) {
@@ -136,6 +123,6 @@ export default class MappedCoordinates {
         }
       }
     }
-    return undefined;
+    throw new Error('Expected to find matching interval');
   }
 }
