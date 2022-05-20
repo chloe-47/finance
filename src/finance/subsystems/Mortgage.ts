@@ -8,16 +8,21 @@ export type StaticConfig = Readonly<{
   apr: string;
   currentBalance: number;
   fixedMonthlyPayment: number;
-  isForeclosed?: true;
   insurancePerYear: number;
   taxPerSixMonths: number;
 }>;
 
-export type Props = Readonly<
-  StaticConfig & {
+export type Props = Readonly<{
+  constants: Readonly<{
+    insurancePerMonth: number;
+    monthlyInterestRate: number;
+    taxPerMonth: number;
+    fixedMonthlyPayment: number;
     timeSeriesBuilder: TimeSeriesTopLevelConfigBuilderMultiSeries;
-  }
->;
+  }>;
+  currentBalance: number;
+  isForeclosed?: true;
+}>;
 
 export default class Mortgage extends Subsystem<Mortgage> {
   private readonly props: Props;
@@ -35,11 +40,17 @@ export default class Mortgage extends Subsystem<Mortgage> {
     mortgage: StaticConfig;
   }): Mortgage {
     return new Mortgage({
-      ...staticConfig,
-      timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
-        dateRange,
-        label: 'Mortgage Payments',
-      }),
+      constants: {
+        fixedMonthlyPayment: staticConfig.fixedMonthlyPayment,
+        insurancePerMonth: staticConfig.insurancePerYear / 12,
+        monthlyInterestRate: parseFloat(staticConfig.apr) / (100 * 12),
+        taxPerMonth: staticConfig.taxPerSixMonths / 6,
+        timeSeriesBuilder: new TimeSeriesTopLevelConfigBuilderMultiSeries({
+          dateRange,
+          label: 'Mortgage Payments',
+        }),
+      },
+      currentBalance: staticConfig.currentBalance,
     });
   }
 
@@ -54,7 +65,7 @@ export default class Mortgage extends Subsystem<Mortgage> {
       );
     }
     this.derivedValuesInternal = this.computeDerivedValues(api);
-    this.props.timeSeriesBuilder.addPoint({
+    this.props.constants.timeSeriesBuilder.addPoint({
       date: api.date,
       style: { color: 'pink', thickness: 'thick' },
       values: this.getValuesForBuilder(this.derivedValuesInternal),
@@ -63,27 +74,21 @@ export default class Mortgage extends Subsystem<Mortgage> {
   }
 
   public override getTimeSeriesConfigs(): ReadonlyArray<TimeSeriesTopLevelConfig> {
-    return [this.props.timeSeriesBuilder.getTopLevelConfig()];
+    return [this.props.constants.timeSeriesBuilder.getTopLevelConfig()];
   }
 
   private computeDerivedValues(api: ResolveExecAPI): DerivedValues {
-    const {
-      apr,
-      currentBalance,
-      fixedMonthlyPayment,
-      isForeclosed,
-      insurancePerYear,
-      taxPerSixMonths,
-    } = this.props;
-    if (isForeclosed) {
+    const currentBalance = this.props.currentBalance;
+    const fixedMonthlyPayment = this.props.constants.fixedMonthlyPayment;
+    if (this.props.isForeclosed) {
       return {
         expensesAmount: 0,
         nextState: new Mortgage(this.props),
         payments: NO_PAYMENTS,
       };
     }
-    const insurance = insurancePerYear / 12;
-    const tax = taxPerSixMonths / 6;
+    const insurance = this.props.constants.insurancePerMonth;
+    const tax = this.props.constants.taxPerMonth;
     const expenseAmount =
       Math.min(fixedMonthlyPayment, currentBalance) + insurance + tax;
 
@@ -94,15 +99,15 @@ export default class Mortgage extends Subsystem<Mortgage> {
       return {
         expensesAmount: amountWithdrawn,
         nextState: new Mortgage({
-          ...this.props,
+          constants: this.props.constants,
+          currentBalance: this.props.currentBalance,
           isForeclosed: true,
         }),
         payments: NO_PAYMENTS,
       };
     } else {
-      const interest = parseFloat(apr) / 100;
       const interestPayment = Math.min(
-        (currentBalance * interest) / 12,
+        currentBalance * this.props.constants.monthlyInterestRate,
         fixedMonthlyPayment,
       );
       const principal = Math.min(
@@ -114,7 +119,7 @@ export default class Mortgage extends Subsystem<Mortgage> {
       return {
         expensesAmount: totalExpense,
         nextState: new Mortgage({
-          ...this.props,
+          constants: this.props.constants,
           currentBalance: newBalance,
         }),
         payments: {

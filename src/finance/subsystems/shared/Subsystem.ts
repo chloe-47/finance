@@ -1,6 +1,9 @@
 import type { TimeSeriesTopLevelConfig } from 'src/finance/TimeSeriesTopLevelConfig';
 import type ResolveExecAPI from '../helpers/ResolveExecAPI';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SubsystemAny = Subsystem<any>;
+
 export default abstract class Subsystem<T extends Subsystem<T>> {
   doesReportExpenses(): boolean {
     return false;
@@ -18,7 +21,7 @@ export default abstract class Subsystem<T extends Subsystem<T>> {
   protected resolvedState: 'Not Started' | 'In Progress' | T = 'Not Started';
 
   public resolve(api: ResolveExecAPI): T {
-    const { resolvedState } = this;
+    const resolvedState = this.resolvedState;
     if (resolvedState === 'In Progress') {
       throw new Error('Circular subsystem resolution dependency');
     } else if (resolvedState === 'Not Started') {

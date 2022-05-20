@@ -36,18 +36,16 @@ export default class FinanceState {
     });
   }
 
-  public getNextStateAndWriteDataToChartBuildersForThisDate({
-    rules,
-    date,
-  }: NextStateArgs): FinanceState {
+  public getNextStateAndWriteDataToChartBuildersForThisDate(
+    args: NextStateArgs,
+  ): FinanceState {
     const nextSubsystems =
-      this.props.subsystems.getNextStateAndWriteDataToChartBuildersForThisDate({
-        date,
-        rules,
-      });
+      this.props.subsystems.getNextStateAndWriteDataToChartBuildersForThisDate(
+        args,
+      );
 
     const nextProps: FinanceStateProps = {
-      ...this.props,
+      dateRange: this.props.dateRange,
       subsystems: nextSubsystems,
     };
 

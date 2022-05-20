@@ -8,7 +8,7 @@ export type Coordinates = Readonly<{
   r: number;
 }>;
 
-type Mapper = Readonly<{
+export type Mapper = Readonly<{
   getCoordinates: (point: Point) => Coordinates;
   zeroYCoord: number | undefined;
 }>;

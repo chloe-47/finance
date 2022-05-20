@@ -1,6 +1,6 @@
 import type Date_ from 'src/dates/Date_';
 import type { Subsystems } from '../shared/FinanceStateSubsystemsTypes';
-import type Subsystem from '../shared/Subsystem';
+import type { SubsystemAny } from '../shared/Subsystem';
 import ResolveExecAPI from './ResolveExecAPI';
 
 type Props = Readonly<{
@@ -11,19 +11,16 @@ type Props = Readonly<{
 export default class SubsystemResolver {
   private readonly props: Props;
   private readonly resolveExecAPI: ResolveExecAPI;
+  public readonly allSubsystems: ReadonlyArray<SubsystemAny>;
 
   public constructor(props: Props) {
     this.props = props;
+    this.allSubsystems = Object.values(this.props.subsystems);
     this.resolveExecAPI = new ResolveExecAPI({
       date: props.date,
       resolver: this,
       subsystems: props.subsystems,
     });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public get allSubsystems(): Array<Subsystem<any>> {
-    return Object.values(this.props.subsystems);
   }
 
   public getNextSubsystems(): Subsystems {

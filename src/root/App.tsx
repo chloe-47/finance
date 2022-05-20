@@ -7,9 +7,12 @@ import TimeSeriesModule from 'src/time_series/TimeSeriesModule';
 
 export default function App() {
   const { ref, rect } = useMeasureElement();
+  const [resolvedSystem, setResolvedSystem] = React.useState<
+    FinanceSystem | undefined
+  >();
   const screenWidth = rect?.width;
   const screenHeight = rect?.height;
-  const system = React.useMemo(
+  const unresolvedSystem = React.useMemo(
     () =>
       new FinanceSystem({
         rules: [
@@ -54,19 +57,26 @@ export default function App() {
           currentAge: 27,
           deadAt: 85,
         },
-      }).resolve(),
+      }),
     [],
   );
+  React.useEffect(() => {
+    unresolvedSystem.resolve().then((res) => setResolvedSystem(res));
+  }, [unresolvedSystem]);
 
-  const configs = system.getTimeSeriesConfigs();
-  const height = (screenHeight ?? 800) / (configs.length * 1.2) - 20;
+  const configs = resolvedSystem?.getTimeSeriesConfigs();
+  const height = (screenHeight ?? 800) / ((configs?.length ?? 0) * 1.2) - 20;
   const width = (screenWidth ?? 1200) * 0.7;
   const viewProps = React.useMemo(
     () => ({
       chartSize: { height, pointRadius: 2, width },
     }),
-    [height, width],
+    [height, width, resolvedSystem],
   );
+
+  if (configs === undefined) {
+    return <div>Loading</div>;
+  }
 
   return (
     <div className="fullScreen" ref={ref}>

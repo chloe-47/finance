@@ -73,22 +73,37 @@ export default class ResolveExecAPI {
     this.props.subsystems.totalIncome.dynamicReportIncome(incomeValue);
   }
 
+  private hasResolvedAllIncome = false;
   public resolveAllIncome(): void {
-    this.props.resolver.allSubsystems
-      .filter((s) => s.doesReportIncome())
-      .forEach((s) => s.resolve(this));
+    if (this.hasResolvedAllIncome) {
+      return;
+    }
+    this.props.resolver.allSubsystems.forEach(
+      (s) => s.doesReportIncome() && s.resolve(this),
+    );
+    this.hasResolvedAllIncome = true;
   }
 
+  private hasResolvedAllExpenses = false;
   public resolveAllExpenses(): void {
-    this.props.resolver.allSubsystems
-      .filter((s) => s.doesReportExpenses())
-      .forEach((s) => s.resolve(this));
+    if (this.hasResolvedAllExpenses) {
+      return;
+    }
+    this.props.resolver.allSubsystems.forEach(
+      (s) => s.doesReportExpenses() && s.resolve(this),
+    );
+    this.hasResolvedAllExpenses = true;
   }
 
+  private hasResolvedAllTransfers = false;
   public resolveAllTransfers(): void {
-    this.props.resolver.allSubsystems
-      .filter((s) => s.doesReportTransfer())
-      .forEach((s) => s.resolve(this));
+    if (this.hasResolvedAllTransfers) {
+      return;
+    }
+    this.props.resolver.allSubsystems.forEach(
+      (s) => s.doesReportTransfer() && s.resolve(this),
+    );
+    this.hasResolvedAllTransfers = true;
   }
 
   public getTotalExpenses(): number {

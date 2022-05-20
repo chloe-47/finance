@@ -4,7 +4,7 @@ type Options = {
   debounceZeroes?: true;
 };
 
-type Rect = {
+export type Rect = {
   bottom: number;
   height: number;
   left: number;
@@ -49,7 +49,7 @@ export default function useMeasureElement<
           }
         });
       };
-      clearTimeout(debounceZeroesRef?.current);
+      debounceZeroesRef?.current && clearTimeout(debounceZeroesRef?.current);
       if (rect_.width === 0 || (rect_.height === 0 && debounceZeroes)) {
         debounceZeroesRef.current = setTimeout(() => {
           setRect_();

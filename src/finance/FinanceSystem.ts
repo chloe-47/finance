@@ -25,7 +25,7 @@ export default class FinanceSystem {
     this.props = props;
   }
 
-  public resolve(): this {
+  public async resolve(): Promise<this> {
     const { rules: rules_, timeSpan } = this.props;
     const { deadAt, currentAge } = timeSpan;
     const yearsAhead = deadAt - currentAge + 1;

@@ -66,81 +66,42 @@ export default function TimeSeriesDataView({
   );
 }
 
-function TimeSeriesDataViewImpl({
+type MemoizedValuesFromImplProps = Readonly<{
+  border: JSX.Element;
+  mappedCoordinates: MappedCoordinates;
+  seriesPaths: JSX.Element[];
+}>;
+
+function getMemoizedValues({
   definition,
   xOffset,
   yOffset,
   valueRange,
-}: ImplProps): JSX.Element {
-  const { ref: svgRef, rect: svgRect } = useMeasureElement();
-  const [hoverCoordinates, setHoverCoordinates] = React.useState<
-    HoverCoordinates | undefined
-  >();
+}: ImplProps): MemoizedValuesFromImplProps {
   const { dataViewMinCoordinate: xMin, dataViewMaxCoordinate: xMax } = xOffset;
   const { dataViewMinCoordinate: yMin, dataViewMaxCoordinate: yMax } = yOffset;
   const { chartSize, dateRange, seriesData } = definition;
-  const { width, height, pointRadius } = chartSize;
-  const { getCoordinates, zeroYCoord } = React.useMemo(
-    () =>
-      createCoordinateMapper({
-        chartSize,
-        dateRange,
-        valueRange,
-        xMax,
-        xMin,
-        yMax,
-        yMin,
-      }),
-    [chartSize, dateRange, valueRange, xMax, xMin, yMax, yMin],
-  );
-
-  const mappedCoordinates = React.useMemo(
-    () =>
-      MappedCoordinates.createMappedCoordinates({
-        definition,
-        getCoordinates,
-        xMax,
-        xMin,
-        yMax,
-        yMin,
-      }),
-    [getCoordinates, definition],
-  );
-
-  const snappedHoverCoordinates = mappedCoordinates.snap(hoverCoordinates);
-
-  return (
-    <div
-      style={{
-        height,
-        width,
-      }}
-    >
-      <svg
-        height={height}
-        onMouseLeave={(): void => {
-          setHoverCoordinates(undefined);
-        }}
-        onMouseMove={(e: React.MouseEvent<SVGSVGElement, MouseEvent>): void => {
-          if (svgRect != null) {
-            const { left, top, bottom } = svgRect;
-            const { clientX: x, clientY: y } = e;
-            if (
-              left + xMin <= x &&
-              x <= left + xMax &&
-              bottom - yMax <= y &&
-              y <= bottom - yMin
-            ) {
-              setHoverCoordinates({ x: x - left, y: y - top });
-            } else {
-              setHoverCoordinates(undefined);
-            }
-          }
-        }}
-        ref={svgRef}
-        width={width}
-      >
-        {/* Border */}
+  const { pointRadius } = chartSize;
+  const { getCoordinates, zeroYCoord } = createCoordinateMapper({
+    chartSize,
+    dateRange,
+    valueRange,
+    xMax,
+    xMin,
+    yMax,
+    yMin,
+  });
+  const mappedCoordinates = MappedCoordinates.createMappedCoordinates({
+    definition,
+    getCoordinates,
+    xMax,
+    xMin,
+    yMax,
+    yMin,
+  });
+  return {
+    border: (
+      <>
         <path
           d={`M ${xMin},${yMin} L ${xMin},${yMax} L ${xMax},${yMax} L ${xMax},${yMin} Z`}
           fill="none"
@@ -159,11 +120,80 @@ function TimeSeriesDataViewImpl({
             strokeWidth={1}
           />
         )}
-        {snappedHoverCoordinates === undefined ? null : (
+      </>
+    ),
+    mappedCoordinates,
+    seriesPaths: seriesData.seriesList.map((series: Series): JSX.Element => {
+      const path = createPath(
+        series.points.map(getCoordinates),
+        pointRadius,
+        series.style,
+      );
+      return <svg key={series.label}>{path}</svg>;
+    }),
+  };
+}
+
+function TimeSeriesDataViewImpl(props: ImplProps): JSX.Element {
+  const { dataViewMinCoordinate: xMin, dataViewMaxCoordinate: xMax } =
+    props.xOffset;
+  const { dataViewMinCoordinate: yMin, dataViewMaxCoordinate: yMax } =
+    props.yOffset;
+  const { width, height } = props.definition.chartSize;
+  const { ref: svgRef, rect: svgRect } = useMeasureElement();
+  const [hoverCoordinates, setHoverCoordinates] = React.useState<
+    HoverCoordinates | undefined
+  >();
+
+  const { border, seriesPaths, mappedCoordinates } = React.useMemo(
+    () => getMemoizedValues(props),
+    [props.definition, props.xOffset, props.yOffset, props.valueRange],
+  );
+
+  const mouseMoveHandler = React.useCallback(
+    (e: React.MouseEvent<SVGSVGElement, MouseEvent>): void => {
+      if (svgRect != null) {
+        const { left, top, bottom } = svgRect;
+        const { clientX: x, clientY: y } = e;
+        if (
+          left + xMin <= x &&
+          x <= left + xMax &&
+          bottom - yMax <= y &&
+          y <= bottom - yMin
+        ) {
+          setHoverCoordinates(
+            mappedCoordinates.snap({ x: x - left, y: y - top }),
+          );
+        } else {
+          setHoverCoordinates(undefined);
+        }
+      }
+    },
+    [svgRect, props.xOffset, props.yOffset, mappedCoordinates],
+  );
+
+  return (
+    <div
+      style={{
+        height,
+        width,
+      }}
+    >
+      <svg
+        height={height}
+        onMouseLeave={(): void => {
+          setHoverCoordinates(undefined);
+        }}
+        onMouseMove={mouseMoveHandler}
+        ref={svgRef}
+        width={width}
+      >
+        {border}
+        {hoverCoordinates === undefined ? null : (
           <path
             d={
-              `M ${xMin},${snappedHoverCoordinates.y} L ${xMax},${snappedHoverCoordinates.y} ` +
-              `M ${snappedHoverCoordinates.x},${yMin} L ${snappedHoverCoordinates.x},${yMax}`
+              `M ${xMin},${hoverCoordinates.y} L ${xMax},${hoverCoordinates.y} ` +
+              `M ${hoverCoordinates.x},${yMin} L ${hoverCoordinates.x},${yMax}`
             }
             fill="none"
             stroke="rgba(255, 255, 255, 0.2)"
@@ -172,14 +202,7 @@ function TimeSeriesDataViewImpl({
             strokeWidth={1}
           />
         )}
-        {seriesData.seriesList.map((series: Series): JSX.Element => {
-          const path = createPath(
-            series.points.map(getCoordinates),
-            pointRadius,
-            series.style,
-          );
-          return <svg key={series.label}>{path}</svg>;
-        })}
+        {seriesPaths}
       </svg>
     </div>
   );
