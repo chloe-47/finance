@@ -36,6 +36,9 @@
   left: 0;
   top: 0;
   z-index: 10;
+}
+
+.topLevelContainer {
   padding-left: 50px;
   padding-right: 50px;
   padding-top: 20px;
