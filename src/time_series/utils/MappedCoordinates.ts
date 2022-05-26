@@ -30,6 +30,16 @@ type Interval = {
   max: number;
 };
 
+export type HoverContentsRenderData = Readonly<{
+  point: Point;
+  label: string;
+}>;
+
+type SnapReturnData = Readonly<{
+  hoverCoordinates: HoverCoordinates;
+  hoverContentsRenderData: HoverContentsRenderData;
+}>;
+
 type Args = Readonly<{
   getCoordinates: (point: Point) => Coordinates;
   definition: TimeSeriesChartDefinitionWithViewProps;
@@ -111,14 +121,23 @@ export default class MappedCoordinates {
     return new MappedCoordinates({ sortedDates });
   }
 
-  snap(hoverCoordinates: HoverCoordinates): HoverCoordinates {
+  snap(hoverCoordinates: HoverCoordinates): SnapReturnData {
     const { x: rawX, y: rawY } = hoverCoordinates;
     const { sortedDates } = this.props;
-    for (const { x, sortedSeries, xInterval } of sortedDates) {
+    for (const { x, sortedSeries, xInterval, date } of sortedDates) {
       if (xInterval.min <= rawX && rawX <= xInterval.max) {
-        for (const { y, yInterval } of sortedSeries) {
+        for (const { y, yInterval, value, label } of sortedSeries) {
           if (yInterval.min <= rawY && rawY <= yInterval.max) {
-            return { x, y };
+            return {
+              hoverContentsRenderData: {
+                label,
+                point: {
+                  date,
+                  value,
+                },
+              },
+              hoverCoordinates: { x, y },
+            };
           }
         }
       }

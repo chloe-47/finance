@@ -21,6 +21,10 @@ export default class IndexFundBalance extends Subsystem<IndexFundBalance> {
     this.props = props;
   }
 
+  public get currentValue(): number {
+    return this.props.balance;
+  }
+
   public static fromStaticConfig({
     dateRange,
     indexFundBalance,

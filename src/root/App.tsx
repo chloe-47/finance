@@ -22,11 +22,11 @@ export default function App() {
               'Start job',
               { annualSalary: 200e3, name: 'Arbitrary tech job' },
             ],
-            trigger: [['Cash <=', 100e3], 'and', 'unemployed'],
+            trigger: [['Liquid Assets <=', 100e3], 'and', 'unemployed'],
           },
           {
             action: 'Quit all jobs',
-            trigger: ['Cash >=', 1e6],
+            trigger: ['Liquid Assets >=', 1e6],
           },
         ],
         subsystems: {

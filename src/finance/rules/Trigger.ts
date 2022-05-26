@@ -1,8 +1,8 @@
-import type TriggerEvalAPI from './subsystems/helpers/TriggerEvalAPI';
+import type TriggerEvalAPI from '../subsystems/helpers/TriggerEvalAPI';
 
 export type Trigger =
-  | Readonly<['Cash >=', number]>
-  | Readonly<['Cash <=', number]>
+  | Readonly<['Liquid Assets >=', number]>
+  | Readonly<['Liquid Assets <=', number]>
   | [Trigger, 'and', Trigger]
   | 'unemployed';
 
@@ -17,10 +17,10 @@ export function shouldTriggerActivate(
 ): boolean {
   if (trigger.length === 2 && typeof trigger[1] === 'number') {
     const value = trigger[1];
-    if (trigger[0] === 'Cash >=') {
-      return evalApi.currentCashAmount >= value;
-    } else if (trigger[0] === 'Cash <=') {
-      return evalApi.currentCashAmount <= value;
+    if (trigger[0] === 'Liquid Assets >=') {
+      return evalApi.liquidAssets >= value;
+    } else if (trigger[0] === 'Liquid Assets <=') {
+      return evalApi.liquidAssets <= value;
     }
   } else if (trigger === 'unemployed') {
     return evalApi.isUnemployed;

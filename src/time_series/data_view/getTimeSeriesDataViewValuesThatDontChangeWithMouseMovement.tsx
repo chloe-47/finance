@@ -94,10 +94,11 @@ export default function getTimeSeriesDataViewValuesThatDontChangeWithMouseMoveme
     }
     const { left, top } = svgRectRef.current;
     const { clientX: x, clientY: y } = e;
-    const relativeCoordinates = mappedCoordinates.snap({
-      x: x - left,
-      y: y - top,
-    });
+    const { hoverCoordinates: relativeCoordinates, hoverContentsRenderData } =
+      mappedCoordinates.snap({
+        x: x - left,
+        y: y - top,
+      });
     const absoluteCoordinates = {
       x: relativeCoordinates.x + left,
       y: relativeCoordinates.y + top,
@@ -122,7 +123,7 @@ export default function getTimeSeriesDataViewValuesThatDontChangeWithMouseMoveme
             pointerEvents: 'all',
           }}
         >
-          <HoverContents label={definition.label} />
+          <HoverContents data={hoverContentsRenderData} />
         </div>
       ),
       coordinates: absoluteCoordinates,

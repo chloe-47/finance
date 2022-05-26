@@ -6,8 +6,10 @@ export default class TriggerEvalAPI {
     this.props = props;
   }
 
-  public get currentCashAmount(): number {
-    return this.props.cash.currentValue;
+  public get liquidAssets(): number {
+    return (
+      this.props.cash.currentValue + this.props.indexFundBalance.currentValue
+    );
   }
 
   public get isUnemployed(): boolean {

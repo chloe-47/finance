@@ -1,9 +1,12 @@
+#root {
+  font-family: sans-serif;
+}
+
 .App {
   align-items: center;
   color: #dad;
   display: flex;
   flex-direction: column;
-  font-family: sans-serif;
   text-align: center;
   border-spacing: 0px;
 }

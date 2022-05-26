@@ -1,10 +1,10 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
 import flatten from 'src/utils/flatten';
-import type FinanceRule from '../../FinanceRule';
+import type FinanceRule from '../../rules/FinanceRule';
 import subtractFederalIncomeTax from '../../subtractFederalIncomeTax';
 import type { TimeSeriesTopLevelConfig } from '../../TimeSeriesTopLevelConfig';
-import { shouldTriggerActivate } from '../../Trigger';
+import { shouldTriggerActivate } from '../../rules/Trigger';
 import Cash from '../Cash';
 import SubsystemsExecState from '../helpers/SubsystemsExecState';
 import IndexFundBalance from '../IndexFundBalance';
