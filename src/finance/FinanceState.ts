@@ -1,6 +1,6 @@
 import type DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
-import type FinanceRule from './FinanceRule';
+import type FinanceRule from './rules/FinanceRule';
 import type {
   FinanceStateProps,
   FinanceStateStaticConfig,

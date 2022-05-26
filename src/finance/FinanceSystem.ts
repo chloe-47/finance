@@ -1,7 +1,7 @@
 import DateRange from 'src/dates/DateRange';
 import type Date_ from 'src/dates/Date_';
-import type { StaticConfig as FinanceRuleStaticConfig } from './FinanceRule';
-import FinanceRule from './FinanceRule';
+import type { StaticConfig as FinanceRuleStaticConfig } from './rules/FinanceRule';
+import FinanceRule from './rules/FinanceRule';
 import FinanceState from './FinanceState';
 import type { FinanceSubsystemStaticConfig } from './subsystems/shared/FinanceStateSubsystemsTypes';
 import type { TimeSeriesTopLevelConfig } from './TimeSeriesTopLevelConfig';

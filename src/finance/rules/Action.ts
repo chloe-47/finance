@@ -1,6 +1,6 @@
-import type { JobStaticConfig } from './Job';
-import Job from './Job';
-import type ActionExecAPI from './subsystems/helpers/ActionExecAPI';
+import type { JobStaticConfig } from '../Job';
+import Job from '../Job';
+import type ActionExecAPI from '../subsystems/helpers/ActionExecAPI';
 
 export type StaticConfig = Readonly<
   ['Start job', JobStaticConfig] | 'Quit all jobs'

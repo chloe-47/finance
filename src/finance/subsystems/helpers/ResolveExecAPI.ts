@@ -124,4 +124,8 @@ export default class ResolveExecAPI {
     this.props.subsystems.indexFundTransfers.resolve(this);
     return this.props.subsystems.indexFundTransfers.getResolvedValue();
   }
+
+  public getIndexFundInitialBalance(): number {
+    return this.props.subsystems.indexFundBalance.currentValue;
+  }
 }

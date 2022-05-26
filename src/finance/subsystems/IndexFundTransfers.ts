@@ -42,7 +42,10 @@ export default class IndexFundTransfers extends Subsystem<IndexFundTransfers> {
     if (initialCash > targetCash.max) {
       indexFundDepositAmount = initialCash - targetCash.max;
     } else if (initialCash < targetCash.min) {
-      indexFundDepositAmount = initialCash - targetCash.min;
+      indexFundDepositAmount = Math.max(
+        api.getIndexFundInitialBalance() * -1,
+        initialCash - targetCash.min,
+      );
     }
 
     this.props.timeSeriesBuilder.addPoint(api.date, indexFundDepositAmount);
